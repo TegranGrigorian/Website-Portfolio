@@ -126,6 +126,16 @@
                 font-size: 0.9em;
             }
         }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -156,7 +166,7 @@
                         <span style="color:#b39ddb;">--------------------</span><br>
                         <span style="color:#fcaf3e;">OS</span>: <span style="color:#83ff08;">Woodix/GNU</span><br>
                         <span style="color:#fcaf3e;">Kernel</span>: <span style="color:#83ff08;">Woodix</span><br>
-                        <span style="color:#fcaf3e;">Age</span>: <span style="color:#83ff08;">25</span><br>
+                        <span style="color:#fcaf3e;">Age</span>: <span style="color:#83ff08;">19</span><br>
                         <span style="color:#fcaf3e;">Education</span>: <span style="color:#83ff08;">Pursuing CE Degree at Grand Valley State University</span><br>
                         <span style="color:#fcaf3e;">Nationality</span>: <span style="color:#83ff08;">Armenian <img src="https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/svg/1f1e6-1f1f2.svg" alt="Armenian flag" width="20" height="15"></span><br>
                         <span style="color:#fcaf3e;">Hobbies</span>: <span style="color:#83ff08;">Gaming, Snowboarding, Coding</span><br>
@@ -192,7 +202,7 @@
         </div>
     </div>
 
-    <div id="portfolio-content">
+    <div id="portfolio-content" class="fade-in" style="display:none;">
         <section style="max-width: 900px; margin: 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
             <h2 class="term-green" style="margin-top:0;">Projects</h2>
             <div style="display: flex; flex-wrap: wrap; gap: 2em;">
@@ -325,6 +335,7 @@
             greeting.style.display = 'none';
             neofetch.style.display = '';
             content.style.display = '';
+            content.classList.remove('fade-in'); // Ensure no animation on reload
         } else {
             content.style.display = 'none';
         }
@@ -337,7 +348,12 @@
                 neofetch.style.display = '';
                 input.value = '';
                 error.style.display = 'none';
+
+                // Show the rest of the portfolio with fade-in animation
                 content.style.display = '';
+                setTimeout(() => {
+                    content.classList.remove('fade-in'); // Remove animation class after it runs
+                }, 500); // Match the fade-in animation duration
                 sessionStorage.setItem('neofetchEntered', 'true');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else if (cmd) {
