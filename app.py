@@ -1,11 +1,18 @@
-from flask import Flask
+from flask import Flask, render_template
 from pages.main import main_bp
-from pages.about import about_bp
 
 def create_app():
     app = Flask(__name__)
     app.register_blueprint(main_bp)
-    app.register_blueprint(about_bp)
+
+    @app.route("/resume/")
+    def resume():
+        return render_template("resume.html")
+
+    @app.route("/test-fonts/")
+    def test_fonts():
+        return render_template("test-fonts.html")
+
     return app
 
 if __name__ == "__main__":

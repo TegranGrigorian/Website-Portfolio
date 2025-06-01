@@ -1,8 +1,185 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'JetBrains Mono', 'Fira Mono', 'Fira Code', 'Source Code Pro', 'Menlo', 'Consolas', monospace;
     margin: 2em;
-    background: #f9f9f9;
+    background: #161821; /* even darker, close to GNOME terminal */
+    color: #d3d7cf; /* GNOME terminal foreground */
+    min-height: 100vh;
+    letter-spacing: 0.01em;
+    transition: background 0.5s;
 }
+
 nav {
-    margin-bottom: 1em;
+    margin-bottom: 2em;
+    background: #181a20;
+    padding: 1em 2em;
+    border-radius: 1em;
+    box-shadow: 0 2px 16px rgba(24,16,38,0.15);
+    text-align: center;
+    border: 1px solid #23203a;
+}
+
+nav a {
+    color: #729fcf; /* GNOME terminal blue */
+    text-decoration: none;
+    font-weight: 600;
+    margin: 0 1.2em;
+    font-size: 1.1em;
+    transition: color 0.2s, background 0.2s;
+    border-radius: 0.3em;
+    padding: 0.2em 0.6em;
+}
+
+nav a:hover {
+    color: #fcaf3e; /* GNOME terminal orange */
+    background: #23203a;
+    text-shadow: 0 0 8px #a18cd1;
+}
+
+h1 {
+    font-size: 2.8em;
+    font-weight: 800;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    text-align: center;
+    letter-spacing: 0.03em;
+    color: #fcaf3e; /* GNOME terminal orange */
+    background: none;
+    -webkit-background-clip: initial;
+    -webkit-text-fill-color: initial;
+}
+
+/* GNOME terminal color palette */
+.term-black    { color: #363636; }
+.term-red      { color: #ff0883; }
+.term-green    { color: #83ff08; }
+.term-yellow   { color: #ff8308; }
+.term-blue     { color: #0883ff; }
+.term-magenta  { color: #8308ff; }
+.term-cyan     { color: #08ff83; }
+.term-white    { color: #b6b6b6; }
+.term-bright-black   { color: #424242; }
+.term-bright-red     { color: #ff1e8e; }
+.term-bright-green   { color: #8eff1e; }
+.term-bright-yellow  { color: #ff8e1e; }
+.term-bright-blue    { color: #1e8eff; }
+.term-bright-magenta { color: #8e1eff; }
+.term-bright-cyan    { color: #1eff8e; }
+.term-bright-white   { color: #c2c2c2; }
+
+/* Language/Framework color tags */
+.term-python    { color: #83ff08; font-weight: 600; }
+.term-flask     { color: #0883ff; font-weight: 600; }
+.term-css       { color: #ff8308; font-weight: 600; }
+.term-bash      { color: #fcaf3e; font-weight: 600; }
+.term-js        { color: #f5c211; font-weight: 600; }
+.term-websocket { color: #08ff83; font-weight: 600; }
+.term-requests  { color: #729fcf; font-weight: 600; }
+.term-rich      { color: #ff0883; font-weight: 600; }
+.term-markdown  { color: #b39ddb; font-weight: 600; }
+.term-sqlite    { color: #a6e3a1; font-weight: 600; }
+.term-docker    { color: #2496ed; font-weight: 600; }
+.term-git       { color: #f34f29; font-weight: 600; }
+.term-cpp       { color: #00599c; font-weight: 600; }
+.term-java      { color: #e76f00; font-weight: 600; }
+
+.test-fonts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+    margin: 2em 0;
+    justify-content: center;
+}
+
+.font-sample {
+    background: #181a20;
+    border: 1px solid #23203a;
+    border-radius: 1em;
+    padding: 1.5em 2em;
+    min-width: 220px;
+    max-width: 320px;
+    box-shadow: 0 2px 16px rgba(24,16,38,0.10);
+    font-family: inherit;
+}
+
+.font-inter {
+    font-family: 'Inter', sans-serif;
+}
+
+.font-fira {
+    font-family: 'Fira Sans', sans-serif;
+}
+
+.font-jetbrains {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.font-segoe {
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.font-roboto {
+    font-family: 'Roboto', sans-serif;
+}
+
+.font-title {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--title-color, #729fcf); /* default to blue */
+    font-family: inherit;
+}
+
+.font-subtitle {
+    font-size: 1.2em;
+    color: var(--subtitle-color, #83ff08); /* default to green */
+    font-family: inherit;
+}
+
+.font-body {
+    font-size: 1em;
+    color: var(--body-color, #d3d7cf);
+    font-family: inherit;
+}
+
+.font-accent {
+    color: var(--accent-color, #ff0883); /* default to magenta */
+    font-weight: 600;
+    font-family: inherit;
+}
+
+.color-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7em;
+    margin-bottom: 1.5em;
+}
+
+.color-controls label {
+    font-size: 0.95em;
+    color: #729fcf;
+    margin-right: 0.7em;
+}
+
+.color-controls input[type="color"] {
+    border: none;
+    background: none;
+    width: 2em;
+    height: 2em;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+@media (max-width: 600px) {
+    body {
+        margin: 1em;
+    }
+    nav {
+        padding: 0.7em 1em;
+    }
+    h1 {
+        font-size: 2em;
+    }
+    .test-fonts {
+        flex-direction: column;
+        gap: 1em;
+    }
 }

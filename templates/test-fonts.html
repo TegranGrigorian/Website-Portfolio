@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Font & Color Test</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Fira+Mono:wght@400;700&family=Fira+Code:wght@400;700&family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a> | <a href="/about/">About</a> | <a href="/test-fonts/">Test Fonts</a>
+    </nav>
+    <h1>Font & Color Test</h1>
+    <div class="test-fonts">
+        <div>
+            <form class="color-controls">
+                <label>Title <input type="color" value="#b39ddb" data-css-var="--title-color"></label>
+                <label>Subtitle <input type="color" value="#9575cd" data-css-var="--subtitle-color"></label>
+                <label>Body <input type="color" value="#e6e6f0" data-css-var="--body-color"></label>
+                <label>Accent <input type="color" value="#7e57c2" data-css-var="--accent-color"></label>
+            </form>
+            <div class="font-sample">
+                <div class="font-title">JetBrains Mono Title</div>
+                <div class="font-subtitle">Subtitle Example</div>
+                <div class="font-body">Body text in JetBrains Mono. <span class="font-accent">Accent color</span></div>
+            </div>
+        </div>
+        <div>
+            <form class="color-controls">
+                <label>Title <input type="color" value="#b39ddb" data-css-var="--title-color"></label>
+                <label>Subtitle <input type="color" value="#9575cd" data-css-var="--subtitle-color"></label>
+                <label>Body <input type="color" value="#e6e6f0" data-css-var="--body-color"></label>
+                <label>Accent <input type="color" value="#7e57c2" data-css-var="--accent-color"></label>
+            </form>
+            <div class="font-sample" style="font-family: 'Fira Mono', monospace;">
+                <div class="font-title">Fira Mono Title</div>
+                <div class="font-subtitle">Subtitle Example</div>
+                <div class="font-body">Body text in Fira Mono. <span class="font-accent">Accent color</span></div>
+            </div>
+        </div>
+        <div>
+            <form class="color-controls">
+                <label>Title <input type="color" value="#b39ddb" data-css-var="--title-color"></label>
+                <label>Subtitle <input type="color" value="#9575cd" data-css-var="--subtitle-color"></label>
+                <label>Body <input type="color" value="#e6e6f0" data-css-var="--body-color"></label>
+                <label>Accent <input type="color" value="#7e57c2" data-css-var="--accent-color"></label>
+            </form>
+            <div class="font-sample" style="font-family: 'Fira Code', monospace;">
+                <div class="font-title">Fira Code Title</div>
+                <div class="font-subtitle">Subtitle Example</div>
+                <div class="font-body">Body text in Fira Code. <span class="font-accent">Accent color</span></div>
+            </div>
+        </div>
+        <div>
+            <form class="color-controls">
+                <label>Title <input type="color" value="#b39ddb" data-css-var="--title-color"></label>
+                <label>Subtitle <input type="color" value="#9575cd" data-css-var="--subtitle-color"></label>
+                <label>Body <input type="color" value="#e6e6f0" data-css-var="--body-color"></label>
+                <label>Accent <input type="color" value="#7e57c2" data-css-var="--accent-color"></label>
+            </form>
+            <div class="font-sample" style="font-family: 'Source Code Pro', monospace;">
+                <div class="font-title">Source Code Pro Title</div>
+                <div class="font-subtitle">Subtitle Example</div>
+                <div class="font-body">Body text in Source Code Pro. <span class="font-accent">Accent color</span></div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
