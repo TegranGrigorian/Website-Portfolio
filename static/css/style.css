@@ -81,6 +81,11 @@ h1 {
 .term-git       { color: #f34f29; font-weight: 600; }
 .term-cpp       { color: #00599c; font-weight: 600; }
 .term-java      { color: #e76f00; font-weight: 600; }
+.term-rust      { color: #dea584; font-weight: 600; } /* Rust */
+.term-gnu       { color: #a8df65; font-weight: 600; } /* GNU */
+.term-mavlink   { color: #ff5f56; font-weight: 600; } /* MAVLink/SDK */
+.term-assem     { color: #c678dd; font-weight: 600; } /* Assembly */
+.term-ultralytics { color: #ffcc00; font-weight: 600; } /* Ultralytics */
 
 .test-fonts {
     display: flex;

@@ -1,0 +1,364 @@
+this is old html code but it has a roughy layout for the project, expirence and contact me that I like, not sure if it works though
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .terminal-landing {
+            background: #181821;
+            color: #d3d7cf;
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 900px;
+            margin: 2em auto;
+            border-radius: 1em;
+            box-shadow: 0 2px 16px #000a;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .terminal-bar {
+            background: #23203a;
+            height: 2em;
+            border-radius: 1em 1em 0 0;
+            display: flex;
+            align-items: center;
+            padding-left: 1em;
+        }
+        .term-dot {
+            width: 0.8em;
+            height: 0.8em;
+            border-radius: 50%;
+            margin-right: 0.5em;
+            display: inline-block;
+        }
+        .term-dot.red { background: #ff5f56; }
+        .term-dot.yellow { background: #ffbd2e; }
+        .term-dot.green { background: #27c93f; }
+        .terminal-content {
+            padding: 2em;
+        }
+        .terminal-prompt {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            margin-top: 1.5em;
+            font-size: 1.1em;
+        }
+        .terminal-input {
+            background: none;
+            border: none;
+            color: #8aadf4;
+            font-family: inherit;
+            font-size: 1.1em;
+            outline: none;
+            width: 10em;
+            padding: 0;
+            margin: 0;
+            caret-color: #8aadf4;
+        }
+        .terminal-cursor {
+            display: inline-block;
+            width: 0.7em;
+            height: 1.1em;
+            background: #8aadf4;
+            margin-left: -0.2em;
+            animation: blink 1s steps(1) infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        .neofetch-output {
+            display: flex;
+            align-items: flex-start;
+            gap: 2em;
+            margin-top: 1.5em;
+        }
+        .neofetch-ascii {
+            font-family: monospace;
+            color: #ff5f56;
+            line-height: 1.1;
+            user-select: none;
+        }
+        .neofetch-info {
+            font-family: 'JetBrains Mono', monospace;
+            color: #d3d7cf;
+            font-size: 1em;
+        }
+        .neofetch-links {
+            margin-top: 1em;
+        }
+        .neofetch-links a {
+            color: #729fcf;
+            text-decoration: none;
+            font-weight: 600;
+            margin-right: 1em;
+        }
+        .neofetch-links a:hover {
+            color: #fcaf3e;
+        }
+        .color-table {
+            display: flex;
+            gap: 0.5em;
+            margin-top: 1em;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        .color-box.black { background: #363636; }
+        .color-box.red { background: #ff0883; }
+        .color-box.green { background: #83ff08; }
+        .color-box.yellow { background: #ff8308; }
+        .color-box.blue { background: #0883ff; }
+        .color-box.magenta { background: #8308ff; }
+        .color-box.cyan { background: #08ff83; }
+        .color-box.white { background: #b6b6b6; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a class="term-blue" href="/">Home</a> | 
+        <a class="term-green" href="/resume/">Resume</a> | 
+        <a class="term-magenta" href="#contact">Contact</a>
+    </nav>
+
+    <div id="terminal" class="terminal-landing">
+        <div class="terminal-bar">
+            <span class="term-dot red"></span>
+            <span class="term-dot yellow"></span>
+            <span class="term-dot green"></span>
+        </div>
+        <div class="terminal-content" id="terminal-content">
+            <div id="terminal-greeting">
+                <span style="color:#83ff08;">tegran@portfolio</span>:<span style="color:#8aadf4;">~</span>$ <span style="color:#d3d7cf;">Welcome to my portfolio!</span>
+                <div style="margin-top:1em; color:#b39ddb;">
+                    Type <span style="color:#8aadf4;">neofetch</span> to begin!
+                </div>
+            </div>
+            <div id="neofetch-output" style="display:none;">
+                <div class="neofetch-output">
+                    <pre class="neofetch-ascii">
+   `.-/+oossssoo+/-.`
+  `:+ssssssssssssssssss+:`
+ -+ssssssssssssssssssyyssss+-
+.ossssssssssssssssssdMMMNysssso.
++ssssssssssssssssshhyMMMMMhssss+
+/ssssssssssssshdmmNNmmyNMMMMhsss/
++ssssssssshmmNNNNNmmdmmNNmyNMMNhs+`
+ossyhyhmmNNNNNmdddddmNNNNmyNMMMMhssso
+ossyhyhmmNNNNNmdddddmNNNNmyNMMMMhssso
+                    </pre>
+                    <div class="neofetch-info">
+                        <span style="color:#8aadf4;">tegran@portfolio</span><br>
+                        <span style="color:#b39ddb;">--------------------</span><br>
+                        <span style="color:#fcaf3e;">Name</span>: <span style="color:#83ff08;">Tegran</span><br>
+                        <span style="color:#fcaf3e;">Age</span>: <span style="color:#83ff08;">25</span><br>
+                        <span style="color:#fcaf3e;">Nationality</span>: <span style="color:#83ff08;">Armenian</span><br>
+                        <span style="color:#fcaf3e;">Education</span>: <span style="color:#83ff08;">B.Sc. in Computer Science</span><br>
+                        <span style="color:#fcaf3e;">Hobbies</span>: <span style="color:#83ff08;">Coding, Linux, Open Source</span><br>
+                        <span style="color:#fcaf3e;">Languages</span>: <span style="color:#83ff08;">Python, JavaScript, Bash</span><br>
+                        <span style="color:#b39ddb;">--------------------</span><br>
+                        <div class="neofetch-links">
+                            <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+                            <a href="https://linkedin.com/in/yourusername" target="_blank">LinkedIn</a>
+                        </div>
+                        <div class="color-table">
+                            <div class="color-box black"></div>
+                            <div class="color-box red"></div>
+                            <div class="color-box green"></div>
+                            <div class="color-box yellow"></div>
+                            <div class="color-box blue"></div>
+                            <div class="color-box magenta"></div>
+                            <div class="color-box cyan"></div>
+                            <div class="color-box white"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <form id="terminal-form" autocomplete="off" style="margin-top:2em;">
+                <div class="terminal-prompt">
+                    <span style="color:#83ff08;">tegran@portfolio</span>:<span style="color:#8aadf4;">~</span>$ 
+                    <input id="terminal-input" class="terminal-input" type="text" autocomplete="off" spellcheck="false" />
+                    <span class="terminal-cursor"></span>
+                </div>
+            </form>
+            <div id="terminal-error" class="terminal-error">Unknown command. Try <b>neofetch</b>.</div>
+        </div>
+    </div>
+
+    <div id="portfolio-content" style="display:none;">
+        <section style="max-width: 900px; margin: 2em auto 0 auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
+            <h2 class="term-green" style="margin-top:0;">Projects</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 2em;">
+                <!-- Project 1 -->
+                <div style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='img/project1-placeholder.png') }}" alt="Project 1" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">Open Source Portfolio</h3>
+                    <p>A customizable portfolio template built with Flask and modern CSS, designed for developers who want a fast, beautiful, and terminal-inspired web presence.</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.5em; margin-bottom:0.7em;">
+                        <span class="term-python" style="font-size:0.95em;">Python</span>
+                        <span class="term-flask" style="font-size:0.95em;">Flask</span>
+                        <span class="term-css" style="font-size:0.95em;">CSS</span>
+                    </div>
+                    <a href="https://github.com/yourusername/portfolio-template" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <!-- Project 2 -->
+                <div style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='img/project2-placeholder.png') }}" alt="Project 2" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-magenta" style="margin:0.7em 0 0.3em 0;">Linux Dotfiles Manager</h3>
+                    <p>A CLI tool for managing and syncing dotfiles across multiple Linux machines, with support for Git integration and easy backups.</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.5em; margin-bottom:0.7em;">
+                        <span class="term-bash" style="font-size:0.95em;">Bash</span>
+                        <span class="term-python" style="font-size:0.95em;">Python</span>
+                    </div>
+                    <a href="https://github.com/yourusername/dotfiles-manager" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#ff8308; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <!-- Project 3 -->
+                <div style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='img/project3-placeholder.png') }}" alt="Project 3" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-green" style="margin:0.7em 0 0.3em 0;">Real-Time Chat App</h3>
+                    <p>A secure, real-time chat application with a terminal-inspired UI, supporting private rooms and emoji reactions.</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.5em; margin-bottom:0.7em;">
+                        <span class="term-js" style="font-size:0.95em;">JavaScript</span>
+                        <span class="term-websocket" style="font-size:0.95em;">WebSocket</span>
+                        <span class="term-flask" style="font-size:0.95em;">Flask</span>
+                    </div>
+                    <a href="https://github.com/yourusername/terminal-chat-app" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#0883ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <!-- Project 4 -->
+                <div style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='img/project4-placeholder.png') }}" alt="Project 4" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-cyan" style="margin:0.7em 0 0.3em 0;">Weather CLI Dashboard</h3>
+                    <p>A terminal-based weather dashboard that fetches and displays weather data in a beautiful, color-coded interface.</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.5em; margin-bottom:0.7em;">
+                        <span class="term-python" style="font-size:0.95em;">Python</span>
+                        <span class="term-requests" style="font-size:0.95em;">Requests</span>
+                        <span class="term-rich" style="font-size:0.95em;">Rich</span>
+                    </div>
+                    <a href="https://github.com/yourusername/weather-cli-dashboard" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <!-- Project 5 -->
+                <div style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='img/project5-placeholder.png') }}" alt="Project 5" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-yellow" style="margin:0.7em 0 0.3em 0;">Personal Blog Engine</h3>
+                    <p>A minimal, fast, and hackable blog engine for developers who want to write in Markdown and deploy anywhere.</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.5em; margin-bottom:0.7em;">
+                        <span class="term-python" style="font-size:0.95em;">Python</span>
+                        <span class="term-markdown" style="font-size:0.95em;">Markdown</span>
+                        <span class="term-sqlite" style="font-size:0.95em;">SQLite</span>
+                    </div>
+                    <a href="https://github.com/yourusername/personal-blog-engine" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#8308ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+            </div>
+        </section>
+
+        <section style="max-width: 900px; margin: 2em auto 0 auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
+            <h2 class="term-cyan" style="margin-top:0;">Experience</h2>
+            <ul style="list-style:none; padding:0;">
+                <li style="margin-bottom:1.5em;">
+                    <div class="term-yellow" style="font-weight:bold;">2022 - Present: Freelance Developer</div>
+                    <div>Worked with clients to build custom web applications, automate workflows, and deploy solutions on Linux servers.</div>
+                    <div style="margin-top:0.5em;">
+                        <span class="term-blue" style="font-weight:600;">Frameworks/Languages:</span>
+                        <span class="term-python">Python</span>, 
+                        <span class="term-flask">Flask</span>, 
+                        <span class="term-js">JavaScript</span>, 
+                        <span class="term-docker">Docker</span>
+                    </div>
+                    <a href="https://github.com/yourusername/freelance-projects" target="_blank" rel="noopener" style="margin-top:0.7em; background:#181a20; color:#729fcf; padding:0.3em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                </li>
+                <li style="margin-bottom:1.5em;">
+                    <div class="term-green" style="font-weight:bold;">2020 - 2022: Open Source Contributor</div>
+                    <div>Contributed to several open source projects, including bug fixes, documentation, and feature development for Python and Linux tools.</div>
+                    <div style="margin-top:0.5em;">
+                        <span class="term-blue" style="font-weight:600;">Frameworks/Languages:</span>
+                        <span class="term-python">Python</span>, 
+                        <span class="term-bash">Bash</span>, 
+                        <span class="term-git">Git</span>
+                    </div>
+                    <a href="https://github.com/yourusername/open-source-contributions" target="_blank" rel="noopener" style="margin-top:0.7em; background:#181a20; color:#83ff08; padding:0.3em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                </li>
+                <li>
+                    <div class="term-magenta" style="font-weight:bold;">2018 - 2020: Computer Science Student</div>
+                    <div>Studied algorithms, data structures, and software engineering principles. Built several personal projects and participated in hackathons.</div>
+                    <div style="margin-top:0.5em;">
+                        <span class="term-blue" style="font-weight:600;">Frameworks/Languages:</span>
+                        <span class="term-python">Python</span>, 
+                        <span class="term-cpp">C++</span>, 
+                        <span class="term-java">Java</span>
+                    </div>
+                    <a href="https://github.com/yourusername/student-projects" target="_blank" rel="noopener" style="margin-top:0.7em; background:#181a20; color:#ff0883; padding:0.3em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Contact Me Section -->
+        <section id="contact" style="max-width: 900px; margin: 2em auto 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
+            <h2 class="term-yellow" style="margin-top:0;">Contact Me</h2>
+            <form style="display:flex; flex-direction:column; gap:1em; max-width:500px; margin:auto;">
+                <input type="text" name="name" placeholder="Your Name" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff;">
+                <input type="email" name="email" placeholder="Your Email" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff;">
+                <textarea name="message" placeholder="Your Message" rows="5" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff;"></textarea>
+                <button type="submit" style="background:#729fcf; color:#181a20; font-weight:700; border:none; border-radius:0.4em; padding:0.8em 1.5em; cursor:pointer;">Send Message</button>
+            </form>
+        </section>
+
+        <div style="text-align:center; margin:3em 0 2em 0;">
+            <a href="#contact" style="background:#ff0883; color:#fff; font-weight:700; padding:1em 2em; border-radius:0.7em; text-decoration:none; font-size:1.2em; box-shadow:0 2px 8px #0004;">Let's Get In Contact</a>
+        </div>
+    </div>
+
+    <script>
+    // filepath: /home/tegran/Documents/portfolio/Website-Portfolio/templates/home.html
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('terminal-form');
+        const input = document.getElementById('terminal-input');
+        const error = document.getElementById('terminal-error');
+        const greeting = document.getElementById('terminal-greeting');
+        const neofetch = document.getElementById('neofetch-output');
+        const content = document.getElementById('portfolio-content');
+
+        // Always focus input on load
+        input.focus();
+
+        // Focus input if user clicks anywhere in terminal
+        document.getElementById('terminal').addEventListener('click', function() {
+            input.focus();
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const cmd = input.value.trim().toLowerCase();
+            if (cmd === 'neofetch') {
+                greeting.style.display = 'none';
+                neofetch.style.display = '';
+                input.value = '';
+                error.style.display = 'none';
+                // Show rest of portfolio
+                content.style.display = '';
+                // Optionally scroll to terminal if user is far down
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (cmd) {
+                error.style.display = 'block';
+                input.value = '';
+            }
+        });
+
+        input.addEventListener('input', function() {
+            error.style.display = 'none';
+        });
+
+        // Hide rest of portfolio until neofetch is entered
+        content.style.display = 'none';
+    });
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
