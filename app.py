@@ -6,7 +6,8 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import os
 
-load_dotenv() #load env
+# Explicitly load the .env file
+load_dotenv(dotenv_path=".env")  # Load .env file from the current directory
 
 def create_app():
     app = Flask(__name__)
