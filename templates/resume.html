@@ -15,13 +15,15 @@
     <h1>Resume</h1>
     <div class="resume-container">
         <div class="resume-wrapper">
-            <iframe src="{{ url_for('static', filename='docs/resume.pdf') }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=100" 
-                    class="resume-iframe"
-                    frameborder="0"
-                    scrolling="no"
-                    allowfullscreen>
-                Your browser does not support PDFs. <a href="{{ url_for('static', filename='docs/resume.pdf') }}">Download the PDF</a>.
-            </iframe>
+            <object data="{{ url_for('static', filename='docs/resume.pdf') }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=100" 
+                    type="application/pdf" 
+                    class="resume-pdf">
+                <iframe src="{{ url_for('static', filename='docs/resume.pdf') }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=100" 
+                        class="resume-iframe-fallback"
+                        frameborder="0">
+                    <p>Your browser does not support PDFs. <a href="{{ url_for('static', filename='docs/resume.pdf') }}">Download the PDF</a>.</p>
+                </iframe>
+            </object>
         </div>
     </div>
 </body>
