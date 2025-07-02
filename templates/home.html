@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .terminal-landing {
+            background: #181821;
+            color: #d3d7cf;
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 900px;
+            margin: 2em auto;
+            border-radius: 1em;
+            box-shadow: 0 2px 16px #000a;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .terminal-bar {
+            background: #23203a;
+            height: 2em;
+            border-radius: 1em 1em 0 0;
+            display: flex;
+            align-items: center;
+            padding-left: 1em;
+        }
+        .term-dot {
+            width: 0.8em;
+            height: 0.8em;
+            border-radius: 50%;
+            margin-right: 0.5em;
+            display: inline-block;
+        }
+        .term-dot.red { background: #ff5f56; }
+        .term-dot.yellow { background: #ffbd2e; }
+        .term-dot.green { background: #27c93f; }
+        .terminal-content {
+            padding: 2em;
+        }
+        .terminal-prompt {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            margin-top: 1.5em;
+            font-size: 1.1em;
+        }
+        .terminal-input {
+            background: none;
+            border: none;
+            color: #8aadf4;
+            font-family: inherit;
+            font-size: 1.1em;
+            outline: none;
+            width: 10em;
+            padding: 0;
+            margin: 0;
+            caret-color: #8aadf4;
+        }
+        .neofetch-output {
+            display: flex;
+            align-items: flex-start;
+            gap: 2em;
+            margin-top: 1.5em;
+            flex-wrap: wrap;
+        }
+        .neofetch-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 0.5em;
+            object-fit: cover;
+        }
+        .neofetch-info {
+            font-family: 'JetBrains Mono', monospace;
+            color: #d3d7cf;
+            font-size: 1em;
+            flex: 1;
+        }
+        .neofetch-links {
+            margin-top: 1em;
+            color: #fcaf3e;
+        }
+        .neofetch-links span {
+            color: #fcaf3e;
+            font-weight: bold;
+        }
+        .color-table {
+            display: flex;
+            gap: 0.5em;
+            margin-top: 1em;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        .color-box.black { background: #363636; }
+        .color-box.red { background: #ff0883; }
+        .color-box.green { background: #83ff08; }
+        .color-box.yellow { background: #ff8308; }
+        .color-box.blue { background: #0883ff; }
+        .color-box.magenta { background: #8308ff; }
+        .color-box.cyan { background: #08ff83; }
+        .color-box.white { background: #b6b6b6; }
+        @media (max-width: 600px) {
+            .neofetch-output {
+                flex-direction: column;
+                align-items: center;
+            }
+            .neofetch-image {
+                width: 100px;
+                height: 100px;
+            }
+            .neofetch-info {
+                font-size: 0.9em;
+                text-align: center;
+            }
+            .terminal-prompt {
+                font-size: 1em;
+            }
+            .terminal-input {
+                width: 8em;
+            }
+            .project-card {
+                font-size: 0.9em;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a class="term-blue" href="/">Home</a> | 
+        <a class="term-green" href="/resume/">Resume</a> | 
+        <a class="term-magenta" href="#contact">Contact</a>
+    </nav>
+
+    <div id="terminal" class="terminal-landing">
+        <div class="terminal-bar">
+            <span class="term-dot red"></span>
+            <span class="term-dot yellow"></span>
+            <span class="term-dot green"></span>
+        </div>
+        <div class="terminal-content" id="terminal-content">
+            <div id="terminal-greeting">
+                <span style="color:#83ff08;">tegran@portfolio</span>:<span style="color:#8aadf4;">~</span>$ <span style="color:#d3d7cf;">Welcome to my portfolio!</span>
+                <div style="margin-top:1em; color:#b39ddb;">
+                    Type <span style="color:#8aadf4;">neofetch</span> to begin!
+                </div>
+            </div>
+            <div id="neofetch-output" style="display:none;">
+                <div class="neofetch-output">
+                    <img src="{{ url_for('static', filename='images/neo_fetch.jpg') }}" alt="Profile Image" class="neofetch-image">
+                    <div class="neofetch-info">
+                        <span style="color:#8aadf4;">tegran@portfolio</span><br>
+                        <span style="color:#b39ddb;">--------------------</span><br>
+                        <span style="color:#fcaf3e;">OS</span>: <span style="color:#83ff08;">Woodix/GNU</span><br>
+                        <span style="color:#fcaf3e;">Kernel</span>: <span style="color:#83ff08;">Woodix</span><br>
+                        <span style="color:#fcaf3e;">Age</span>: <span style="color:#83ff08;">19</span><br>
+                        <span style="color:#fcaf3e;">Education</span>: <span style="color:#83ff08;">Pursuing CE Degree at Grand Valley State University</span><br>
+                        <span style="color:#fcaf3e;">Nationality</span>: <span style="color:#83ff08;">Armenian <img src="https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/svg/1f1e6-1f1f2.svg" alt="Armenian flag" width="20" height="15"></span><br>
+                        <span style="color:#fcaf3e;">Hobbies</span>: <span style="color:#83ff08;">Gaming, Snowboarding, Coding</span><br>
+                        <span style="color:#fcaf3e;">Languages</span>: <span style="color:#83ff08;">Rust, C/C++, Python</span><br>
+                        <span style="color:#fcaf3e;">Pet</span>: <span style="color:#83ff08;">Woody</span><br>
+                        <span style="color:#fcaf3e;">Favorite Shows</span>: <span style="color:#83ff08;">Breaking Bad, Neon Genesis Evangelion, 86</span><br>
+                        <span style="color:#fcaf3e;">Favorite Movies</span>: <span style="color:#83ff08;">Batman: Dark Knight, Dune Part 2</span><br>
+                        <div class="neofetch-links">
+                            <span>Quick Links:</span> <a href="https://github.com/TegranGrigorian" target="_blank">GitHub</a>, <a href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank">LinkedIn</a>
+                        </div>
+                        <div class="color-table">
+                            <div class="color-box black"></div>
+                            <div class="color-box red"></div>
+                            <div class="color-box green"></div>
+                            <div class="color-box yellow"></div>
+                            <div class="color-box blue"></div>
+                            <div class="color-box magenta"></div>
+                            <div class="color-box cyan"></div>
+                            <div class="color-box white"></div>
+                        </div>
+                        <span style="color:#b39ddb;">--------------------</span><br>
+                        <span style="color:#fcaf3e;">Bio</span>: <span style="color:#83ff08;">Passionate developer, I love building low-level programs and using ML/AI and code to automate tasks. I plan on transfering to the University of Michigan for Computer Engineering.</span>
+                    </div>
+                </div>
+            </div>
+            <form id="terminal-form" autocomplete="off" style="margin-top:2em;">
+                <div class="terminal-prompt">
+                    <span style="color:#83ff08;">tegran@portfolio</span>:<span style="color:#8aadf4;">~</span>$ 
+                    <input id="terminal-input" class="terminal-input" type="text" autocomplete="off" spellcheck="false" />
+                </div>
+            </form>
+            <div id="terminal-error" class="terminal-error" style="display:none;">Unknown command. Try <b>neofetch</b>.</div>
+        </div>
+    </div>
+
+    <div id="portfolio-content" class="fade-in" style="display:none;">
+        <section style="max-width: 900px; margin: 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
+            <h2 class="term-green" style="margin-top:0;">Projects</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 2em;">
+                <!-- First Large Project -->
+                <div style="flex: 1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_1.png') }}" alt="Project 1" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">"Woodix" - Kernel from Scratch</h3>
+                    <p>A custom kernel I am working on written in C, Rust, and Assembly; this kernel is a "copy" of the first verison of Linux. From this project I learned how to create a bootloader, kernel, filesystem, scheduler, linkers, loaders and system calls. I love developing low level software and hope to expand on the lessons learned from this project to create CUDA drivers, low level frameworks, compilers and more advance kernels</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-rust">Rust</span>, <span class="term-cpp">C</span>, <span class="term-assem">Assembly</span>, <span class="term-gnu">GNU</span>
+                    </div>
+                    <a href="https://github.com/TegranGrigorian/Woodix" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <!-- Second Large Project -->
+                <div style="flex: 1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_2.jpg') }}" alt="Project 2" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-magenta" style="margin:0.7em 0 0.3em 0;">Autonomous Drone Delivery System</h3>
+                    <p>A program to automate drone delivry of medical supplies. This is a project using open source resource such as the Flightory Stallion VTOL to construct a drone and pair it with a companian computer (Jetson Nano) to autonomously navigate the drone. The companian computer also runs a YOLO model to detect landing zones for the drone to drop off packages. I plan on open sourcing this project and documenting setup.</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-python">Python</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-docker">Docker</span>, <span class="term-js">Java Script</span>, <span class = "term-websocket"> HTML </span>,<span class="term-bash">Shell</span>, <span class="term-git">ROS</span>, <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span>
+                    </div>
+                    <a href="https://github.com/TegranGrigorian/autonomous-drone-delivery" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#ff8308; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <!-- Smaller Projects -->
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_3.png') }}" alt="Project 3" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-green" style="margin:0.7em 0 0.3em 0;">Website Portfolio</h3>
+                    <p>The web portfolio you are currently viewing, emulates a simple terminal, in the landing page and ui/ux. This project taught me how to use Web-dev tools and languages (sadly) and integrate them to Python's Flask framework. :)</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-js">JavaScript</span>, <span class="term-websocket">WebSocket</span>, <span class="term-flask">Flask</span>, <span class="term-websocket">HTML</span>, <span class="term-css">CSS</span>, <span class="term-python">Python</span>, <span class="term-docker">Docker</span>
+                    </div>
+                    <a href="https://github.com/TegranGrigorian/Website-Portfolio" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#0883ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_4.png') }}" alt="Project 4" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-cyan" style="margin:0.7em 0 0.3em 0;">Youtube to Mp3/Mp4 Converter</h3>
+                    <p>A application that allows the user to download Youtube videos as MP3s or MP4s. This projet taught me how to program file handling, safe multi-threading code with Rust and creating shell and install wizards for intuitive installation/uninstallation of the application.</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>
+                    </div>
+                    <a href="https://github.com/TegranGrigorian/yt-to-mp3-4" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_5.png') }}" alt="Project 5" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-yellow" style="margin:0.7em 0 0.3em 0;">First Robotics Competition (FRC) Swerve Drive Code</h3>
+                    <p>Code that allows a user to drive and automate a FRC swerve drive compeition robot. This project taught me how to use source control and write fast responding code in Java.</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-java">Java</span>, <span class="term-git">Git</span>, <span class="term-sqlite">ROS</span>
+                    </div>
+                    <a href="https://github.com/TegranGrigorian/216-FRC-" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#8308ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_6.jpg') }}" alt="Project 6" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-red" style="margin:0.7em 0 0.3em 0;">"Trains++" - Satisfactory Software Modification</h3>
+                    <p>A software modificaiton to the game "Satisfactory" that adds high-speed trains. This project taught me how to use Visual Studio and the Unreal Engine to develop video games.</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-cpp">C++</span>, <span class="term-git">Git</span>
+                    </div>
+                    <a href="https://github.com/TegranGrigorian/TrainsPlusPlusMod" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#ff0883; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_7.png') }}" alt="Project 7" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-green" style="margin:0.7em 0 0.3em 0;">Vex-AI Robot Code</h3>
+                    <p>A program to autonomously control a Vex AI robot with numerous control loop by detecing intended targets using a jetson nano running infrence on a camera with a YOLO V5 model. I've used the lessons and skills learned from this project to win the Vex-AI World Championship.</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics - YOLO Model (ML/AI)</span>
+                    </div>
+                    <a href="https://github.com/TegranGrigorian/VexAi-1248X-Slave" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_8.jpg') }}" alt="Project 8" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">Coming Soon!</h3>
+                    <p>Coming soon!</p>
+                    <div style="margin-bottom:0.7em;">
+                        <span class="term-python">Languages/Frameworks:</span> <span class="term-python">Python</span>, <span class="term-flask">Flask</span>, <span class="term-chartjs">Chart.js</span>
+                    </div>
+                    <a href="https://github.com/yourusername/portfolio-analytics" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                </div>
+            </div>
+        </section>
+
+        <section style="max-width: 900px; margin: 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
+            <h2 class="term-cyan" style="margin-top:0;">Experience</h2>
+            <ul style="list-style:none; padding:0;">
+                <li style="margin-bottom:1.5em;">
+                    <div class="term-yellow" style="font-weight:bold;">2024 - Present: Westwood AI - Software Engineer</div>
+                    <div>Worked with peers to automate capture of commerical property to reconstruct 3D models on the building, run AI detection on anomalies, handle data with SQL and automated report genertaion for insurance claims. Currently Im leading a group of 9 interns in further development of our software, specifically in automation through python scripts and ML/AI.</div>
+                    <div style="margin-top:0.5em;">
+                        <span class="term-blue" style="font-weight:600;">Frameworks/Languages:</span> <span class="term-python">Python</span>, <span class="term-flask">Flask</span>, <span class="term-websocket">JavaScript</span>, <span class="term-docker">Docker</span>, <span class="term-sqlite">SQLite</span>, <span class="term-rich">AWS</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>, <span class="term-cpp">C#</span>, <span class="term-gnu">Label Studio</span>, <span class="term-mavlink">Linux</span>
+                    </div>
+                </li>
+                <li style="margin-bottom:1.5em;">
+                    <div class="term-green" style="font-weight:bold;">2020 - 2024: High-School Robotics</div>
+                    <div>Contributed and lead several teams to build and code robots to compete in high level compeition. During my time in robotics, I won numerous prestigous awards including, an FRC District-Championship, Vex-AI World Championship and Michigan Vex State Championship. I also taught many of my peers how to program and open sourced my code.</div>
+                    <div style="margin-top:0.5em;">
+                        <span class="term-blue" style="font-weight:600;">Frameworks/Languages:</span> <span class="term-python">Python</span>, <span class="term-java">Bash</span>, <span class="term-git">Git</span>, <span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-gnu">GNU</span>, <span class="term-websocket">Linux</span>
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <section id="contact" style="max-width: 900px; margin: 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
+            <h2 class="term-yellow" style="margin-top:0;">Contact Me</h2>
+            <form action="/send-email" method="POST" style="display:flex; flex-direction:column; gap:1em; max-width:500px; margin:auto;">
+                <input type="text" name="name" placeholder="Your Name" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff;">
+                <input type="email" name="email" placeholder="Your Email" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff;">
+                <textarea name="message" placeholder="Your Message" rows="5" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff; resize:none;"></textarea>
+                <button type="submit" style="background:#729fcf; color:#181a20; font-weight:700; border:none; border-radius:0.4em; padding:0.8em 1.5em; cursor:pointer;">Send Message</button>
+            </form>
+        </section>
+    </div>
+
+    <script>
+    // filepath: /home/tegran/Documents/portfolio/Website-Portfolio/templates/home.html
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('terminal-form');
+        const input = document.getElementById('terminal-input');
+        const error = document.getElementById('terminal-error');
+        const greeting = document.getElementById('terminal-greeting');
+        const neofetch = document.getElementById('neofetch-output');
+        const content = document.getElementById('portfolio-content');
+
+        // Automatically focus input on load
+        input.focus();
+
+        // Check if neofetch has already been entered
+        let neofetchEntered = sessionStorage.getItem('neofetchEntered') === 'true';
+
+        if (neofetchEntered) {
+            greeting.style.display = 'none';
+            neofetch.style.display = '';
+            content.style.display = '';
+            content.classList.remove('fade-in'); // Ensure no animation on reload
+        } else {
+            content.style.display = 'none';
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const cmd = input.value.trim().toLowerCase();
+            if (cmd === 'neofetch') {
+                greeting.style.display = 'none';
+                neofetch.style.display = '';
+                input.value = '';
+                error.style.display = 'none';
+
+                // Show the rest of the portfolio with fade-in animation
+                content.style.display = '';
+                setTimeout(() => {
+                    content.classList.remove('fade-in'); // Remove animation class after it runs
+                }, 500); // Match the fade-in animation duration
+                sessionStorage.setItem('neofetchEntered', 'true');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (cmd) {
+                error.style.display = 'block';
+                input.value = '';
+            }
+        });
+
+        input.addEventListener('input', function() {
+            error.style.display = 'none';
+        });
+    });
+    </script>
+</body>
+</html>

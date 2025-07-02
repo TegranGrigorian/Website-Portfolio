@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a class="term-blue" href="/">Home</a> | 
+        <a class="term-green" href="/resume/">Resume</a> | 
+        <a class="term-magenta" href="#contact">Contact</a>
+    </nav>
+    <h1>Resume</h1>
+    <div class="resume-container">
+        <div class="resume-wrapper">
+            <iframe src="{{ url_for('static', filename='docs/resume.pdf') }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH" class="resume-iframe">
+                Your browser does not support PDFs. <a href="{{ url_for('static', filename='docs/resume.pdf') }}">Download the PDF</a>.
+            </iframe>
+        </div>
+    </div>
+</body>
+</html>
