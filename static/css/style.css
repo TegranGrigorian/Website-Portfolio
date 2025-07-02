@@ -174,34 +174,71 @@ h1 {
     vertical-align: middle;
 }
 
+/* Resume container styles */
 .resume-container {
+    width: 100%;
+    height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    min-height: 85vh;
-    padding: 1em 0;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .resume-wrapper {
-    background: #181a20;
-    border: 1px solid #23203a;
-    border-radius: 1em;
-    padding: 1.5em;
-    box-shadow: 0 4px 20px rgba(24,16,38,0.3);
-    max-width: 95%;
     width: 100%;
-    max-width: 1000px;
+    max-width: 900px;
+    height: 80vh;
+    position: relative;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .resume-iframe {
     width: 100%;
-    height: 80vh;
-    min-height: 700px;
+    height: 100%;
     border: none;
-    border-radius: 0.5em;
-    background: #fff;
-    transform: scale(1.0);
-    transform-origin: top left;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Firefox-specific fixes */
+@-moz-document url-prefix() {
+    .resume-iframe {
+        position: static !important;
+        transform: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .resume-wrapper {
+        overflow: hidden;
+    }
+    
+    .resume-container {
+        position: relative;
+        overflow: hidden;
+    }
+}
+
+/* Additional Firefox compatibility */
+.resume-iframe:-moz-loading {
+    background: #f0f0f0;
+}
+
+/* Ensure proper rendering across browsers */
+.resume-wrapper::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: -1;
 }
 
 @media (max-width: 600px) {
