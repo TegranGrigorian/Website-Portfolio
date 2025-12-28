@@ -13,9 +13,9 @@ def create_app():
     app = Flask(__name__)
     app.register_blueprint(main_bp)
     app.register_blueprint(contact_bp)
-    @app.route("/resume/")
-    def resume():
-        return render_template("resume.html")
+    # @app.route("/resume/")
+    # def resume():
+    #     return render_template("resume.html")
 
     @app.route("/test-fonts/")
     def test_fonts():
