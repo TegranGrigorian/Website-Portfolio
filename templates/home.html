@@ -675,8 +675,9 @@
         /* ── Tab autocomplete ── */
         const ALL_CMDS = [
             'help', 'neofetch', 'whoami', 'pwd', 'uname -a',
-            'ls', 'ls projects', 'ls experience',
+            'ls', 'ls projects', 'ls experience', 'ls skills',
             'cat about', 'cat projects', 'cat experience',
+            'git log', 'htop',
             'clear', 'contact', 'mail', 'open github', 'open linkedin',
         ];
 
@@ -849,6 +850,9 @@
             'clear':        cmdClear,
             'contact':      cmdMail,
             'mail':         cmdMail,
+            'ls skills':    cmdLsSkills,
+            'git log':      cmdGitLog,
+            'htop':         cmdHtop,
             'open github':  () => window.open('https://github.com/TegranGrigorian', '_blank'),
             'open linkedin':() => window.open('https://www.linkedin.com/in/tegran-grigorian/', '_blank'),
         };
@@ -878,6 +882,9 @@
   <tr><td>ls projects</td><td>Full project cards with details</td></tr>
   <tr><td>ls experience</td><td>Full experience entries</td></tr>
   <tr><td>cat about</td><td>Read about me</td></tr>
+  <tr><td>ls skills</td><td>List skills as Unix files</td></tr>
+  <tr><td>git log</td><td>Commit history — career milestones</td></tr>
+  <tr><td>htop</td><td>Skills as running processes w/ CPU bars</td></tr>
   <tr><td>contact / mail</td><td>Compose &amp; send a message (multi-step)</td></tr>
   <tr><td>open github</td><td>Open GitHub profile</td></tr>
   <tr><td>open linkedin</td><td>Open LinkedIn profile</td></tr>
