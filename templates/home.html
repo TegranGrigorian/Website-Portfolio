@@ -1131,7 +1131,7 @@
         function cmdSkip() {
             showContent();
             minimizeTerminal();
-            setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 100);
+            setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 550);
         }
 
         function cmdReboot() {
@@ -1316,7 +1316,7 @@ ${rows}
                 sessionStorage.setItem('booted', 'true');
                 sessionStorage.setItem('portfolioVisible', 'true');
                 termStageEl.style.visibility = '';
-                setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 200);
+                setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 600);
             } else {
                 /* Terminal mode — reveal, then animate bash startup lines */
                 termStageEl.style.visibility = '';
