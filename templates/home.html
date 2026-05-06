@@ -613,9 +613,26 @@
 
         input.addEventListener('keydown', function (e) {
 
+            /* ── Ctrl+L: clear terminal ── */
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                cmdClear();
+                return;
+            }
+
+            /* ── Ctrl+C: cancel mail form (or just echo ^C if not in form) ── */
+            if (e.ctrlKey && e.key === 'c') {
+                if (formActive) {
+                    e.preventDefault();
+                    cancelForm();
+                }
+                return;
+            }
+
             /* ── Tab completion ── */
             if (e.key === 'Tab') {
                 e.preventDefault();
+                if (formActive) return;
                 const typed = input.value;
                 if (tabMatches.length === 0) {
                     tabMatches = ALL_CMDS.filter(c => c.toLowerCase().startsWith(typed.toLowerCase()));
@@ -650,6 +667,7 @@
             /* ── History navigation ── */
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
+                if (formActive) return;
                 if (histIdx < cmdHistory.length - 1) {
                     histIdx++;
                     input.value = cmdHistory[cmdHistory.length - 1 - histIdx];
@@ -660,6 +678,7 @@
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
+                if (formActive) return;
                 if (histIdx > 0) {
                     histIdx--;
                     input.value = cmdHistory[cmdHistory.length - 1 - histIdx];
@@ -672,12 +691,16 @@
                 return;
             }
 
-            /* ── Escape clears input and suggestions ── */
+            /* ── Escape: clear input / cancel form ── */
             if (e.key === 'Escape') {
-                input.value = '';
-                ghostEl.textContent = '';
-                hideSuggestions();
-                updateInputWidth();
+                if (formActive) {
+                    cancelForm();
+                } else {
+                    input.value = '';
+                    ghostEl.textContent = '';
+                    hideSuggestions();
+                    updateInputWidth();
+                }
                 return;
             }
 
@@ -978,19 +1001,154 @@
             });
         }
 
-        /* ── Form submit ── */
+        /* ── Command history ── */
         const cmdHistory = [];
         let histIdx = -1;
 
+        /* ── Mail form helpers ── */
+        const FORM_STEPS = [
+            {
+                key: 'name', label: 'name',
+                placeholder: 'your full name',
+                validate: v => v.trim().length >= 2,
+                err: 'Name must be at least 2 characters.',
+            },
+            {
+                key: 'email', label: 'email',
+                placeholder: 'reply-to address',
+                validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+                err: 'Enter a valid email address.',
+            },
+            {
+                key: 'message', label: 'message',
+                placeholder: 'write your message here',
+                validate: v => v.trim().length >= 5,
+                err: 'Message must be at least 5 characters.',
+            },
+        ];
+
+        const promptPrefix = document.getElementById('prompt-prefix');
+
+        function resetPrompt() {
+            promptPrefix.innerHTML =
+                '<span style="color:#83ff08;">tegran@portfolio</span>' +
+                '<span style="color:#555a7a;">:</span>' +
+                '<span style="color:#8aadf4;">~</span>' +
+                '<span style="color:#d3d7cf;">$</span>';
+        }
+
+        function setFormPrompt(label) {
+            promptPrefix.innerHTML =
+                `<span style="color:#fcaf3e;">${label}</span>` +
+                `<span style="color:#555a7a;"> ›</span>`;
+        }
+
+        function cmdMail() {
+            formActive = true;
+            formStep = 0;
+            formData = {};
+            ghostEl.textContent = '';
+            hideSuggestions();
+            appendLine(`<div class="term-output-block" style="border-left:3px solid #fcaf3e; padding-left:1em; margin-bottom:0.2em;">
+  <span style="color:#fcaf3e; font-weight:700;">compose mail</span>  <span style="color:#555a7a;">— send a message to tegran</span><br>
+  <span style="color:#b39ddb; font-size:0.9em;">Ctrl+C or Escape to cancel</span>
+</div>`);
+            promptFormStep();
+        }
+
+        function promptFormStep() {
+            const step = FORM_STEPS[formStep];
+            setFormPrompt(`[${formStep + 1}/${FORM_STEPS.length}] ${step.label}`);
+            input.placeholder = step.placeholder;
+            updateInputWidth();
+        }
+
+        function advanceForm(val) {
+            const step = FORM_STEPS[formStep];
+            if (!step.validate(val)) {
+                appendLine(`<span style="color:#ff5f56;">✗ ${step.err}</span>`);
+                return;
+            }
+            appendLine(
+                `<span style="color:#fcaf3e;">[${formStep + 1}/${FORM_STEPS.length}] ${step.label}</span>` +
+                `<span style="color:#555a7a;"> › </span>` +
+                `<span style="color:#83ff08;">${escHtml(val.trim())}</span>`
+            );
+            formData[step.key] = val.trim();
+            formStep++;
+            if (formStep >= FORM_STEPS.length) {
+                formActive = 'confirm';
+                appendLine(`<div class="term-output-block" style="border-left:3px solid #83ff08; padding-left:1em; margin-top:0.4em;">
+  <span style="color:#83ff08; font-weight:700;">── message preview ──</span><br>
+  <span style="color:#fcaf3e;">from</span>:    <span style="color:#d3d7cf;">${escHtml(formData.name)}</span><br>
+  <span style="color:#fcaf3e;">email</span>:   <span style="color:#d3d7cf;">${escHtml(formData.email)}</span><br>
+  <span style="color:#fcaf3e;">message</span>:<br>
+  <span style="color:#d3d7cf; padding-left:1em;">${escHtml(formData.message)}</span>
+</div>`);
+                setFormPrompt('send? [y/N]');
+                input.placeholder = 'y or n';
+            } else {
+                promptFormStep();
+            }
+        }
+
+        function cancelForm() {
+            formActive = false;
+            formStep = 0;
+            formData = {};
+            input.placeholder = 'type a command…';
+            resetPrompt();
+            appendLine(`<span style="color:#ff5f56;">^C</span><span style="color:#b39ddb;"> — mail cancelled.</span>`);
+            updateInputWidth();
+        }
+
+        /* ── Form submit ── */
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             const raw = input.value;
-            if (!raw.trim()) return;
-            cmdHistory.push(raw.trim());
-            histIdx = -1;
             input.value = '';
             ghostEl.textContent = '';
             updateInputWidth();
+
+            /* confirmation step */
+            if (formActive === 'confirm') {
+                const ans = raw.trim().toLowerCase();
+                if (ans === 'y' || ans === 'yes') {
+                    formActive = false;
+                    input.placeholder = 'type a command…';
+                    resetPrompt();
+                    appendLine(`<span style="color:#83ff08;">Sending…</span>`);
+                    fetch('/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                            name:    formData.name,
+                            email:   formData.email,
+                            message: formData.message,
+                        }),
+                    })
+                    .then(r => r.ok ? r.text() : Promise.reject(r.status))
+                    .then(() => appendLine(`<span style="color:#83ff08;">✓ Message sent — I'll get back to you soon!</span>`))
+                    .catch(() => appendLine(`<span style="color:#ff5f56;">✗ Send failed. Try reaching me via LinkedIn instead.</span>`));
+                } else {
+                    formActive = false;
+                    input.placeholder = 'type a command…';
+                    resetPrompt();
+                    appendLine(`<span style="color:#b39ddb;">Mail discarded.</span>`);
+                }
+                return;
+            }
+
+            /* active field collection */
+            if (formActive) {
+                advanceForm(raw);
+                return;
+            }
+
+            /* normal command mode */
+            if (!raw.trim()) return;
+            cmdHistory.push(raw.trim());
+            histIdx = -1;
             runCmd(raw);
         });
 
