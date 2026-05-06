@@ -1878,12 +1878,19 @@ ${rows}
             formStep++;
             if (formStep >= FORM_STEPS.length) {
                 formActive = 'confirm';
+                /* Render [label](url) as clickable links in preview */
+                const msgHtml = escHtml(formData.message)
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+                        '<a href="$2" target="_blank" rel="noopener" style="color:#8aadf4;">$1</a>');
+                const attachHtml = (formData.attachments && formData.attachments.length)
+                    ? `<br><span style="color:#fcaf3e;">attach</span>:  <span style="color:#d3d7cf;">${formData.attachments.map(f=>escHtml(f.name)).join(', ')}</span>`
+                    : '';
                 appendLine(`<div class="term-output-block" style="border-left:3px solid #83ff08; padding-left:1em; margin-top:0.4em;">
   <span style="color:#83ff08; font-weight:700;">── message preview ──</span><br>
   <span style="color:#fcaf3e;">from</span>:    <span style="color:#d3d7cf;">${escHtml(formData.name)}</span><br>
   <span style="color:#fcaf3e;">email</span>:   <span style="color:#d3d7cf;">${escHtml(formData.email)}</span><br>
   <span style="color:#fcaf3e;">message</span>:<br>
-  <pre style="color:#d3d7cf; padding-left:1em; margin:0.2em 0 0; white-space:pre-wrap; word-break:break-word;">${escHtml(formData.message)}</pre>
+  <pre style="color:#d3d7cf; padding-left:1em; margin:0.2em 0 0; white-space:pre-wrap; word-break:break-word;">${msgHtml}</pre>${attachHtml}
 </div>`);
                 setFormPrompt('send? [y/N]');
                 input.placeholder = 'y or n';
@@ -1922,15 +1929,12 @@ ${rows}
                     input.placeholder = 'type a command…';
                     resetPrompt();
                     appendLine(`<span style="color:#83ff08;">Sending…</span>`);
-                    fetch('/send-email', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: new URLSearchParams({
-                            name:    formData.name,
-                            email:   formData.email,
-                            message: formData.message,
-                        }),
-                    })
+                    const fd = new FormData();
+                    fd.append('name',    formData.name);
+                    fd.append('email',   formData.email);
+                    fd.append('message', formData.message);
+                    (formData.attachments || []).forEach(f => fd.append('attachments', f));
+                    fetch('/send-email', { method: 'POST', body: fd })
                     .then(r => r.ok ? r.text() : Promise.reject(r.status))
                     .then(() => appendLine(`<span style="color:#83ff08;">✓ Message sent — I'll get back to you soon!</span>`))
                     .catch(() => appendLine(`<span style="color:#ff5f56;">✗ Send failed. Try reaching me via LinkedIn instead.</span>`));
