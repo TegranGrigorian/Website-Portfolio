@@ -438,6 +438,32 @@
     </style>
 </head>
 <body>
+
+    <!-- ══════════════════════════════════════════
+         GRUB-STYLE BOOT MENU
+    ══════════════════════════════════════════ -->
+    <div id="grub-screen" role="dialog" aria-label="Boot menu" aria-modal="true">
+        <div id="grub-inner">
+            <div class="grub-header-line">
+                <span class="grub-hl">WoodixBOOT</span> &nbsp;v2.06 &nbsp;|&nbsp; UEFI &nbsp;|&nbsp; x86_64
+                <span style="float:right; color:#2a2d3a;">ESC to skip</span>
+            </div>
+
+            <div id="grub-menu-box" role="listbox" aria-label="Boot options">
+                <div class="grub-entry grub-active" role="option" aria-selected="true"  data-grub-idx="0"> * &nbsp; Tegran Grigorian &nbsp;—&nbsp; Terminal Environment</div>
+                <div class="grub-entry"             role="option" aria-selected="false" data-grub-idx="1"> &nbsp; &nbsp; Tegran Grigorian &nbsp;—&nbsp; Skip to Portfolio</div>
+            </div>
+
+            <div id="grub-hint">
+                Use the ↑ and ↓ keys to select which entry is highlighted.<br>
+                Press Enter to boot the selected OS, or Esc to skip the menu.
+            </div>
+            <div id="grub-timer-line">
+                The highlighted entry will be executed automatically in <span id="grub-timer">5</span>s.
+            </div>
+        </div>
+    </div>
+
     <nav>
         <a class="term-blue" href="/">~/home</a> |
         <a class="term-green" href="#projects">~/projects</a> |
@@ -493,15 +519,10 @@
 
         <!-- quick-command buttons -->
         <div class="cmd-buttons" role="toolbar" aria-label="Quick commands">
-            <button class="cmd-btn" data-cmd="neofetch"    aria-label="Run neofetch">neofetch</button>
-            <button class="cmd-btn" data-cmd="help"        aria-label="Show help">help</button>
-            <button class="cmd-btn" data-cmd="ls"          aria-label="List directory">ls</button>
-            <button class="cmd-btn" data-cmd="cat about"   aria-label="About me">cat about</button>
-            <button class="cmd-btn" data-cmd="ls projects" aria-label="List projects">ls projects</button>
-            <button class="cmd-btn" data-cmd="ls experience" aria-label="List experience">ls experience</button>
-            <button class="cmd-btn" data-cmd="whoami"      aria-label="whoami">whoami</button>
-            <button class="cmd-btn" data-cmd="uname -a"    aria-label="uname">uname -a</button>
-            <button class="cmd-btn" data-cmd="contact"     aria-label="Show contact">contact</button>
+            <button class="cmd-btn" data-cmd="help"         aria-label="Show help">help</button>
+            <button class="cmd-btn" data-cmd="ls projects"  aria-label="List projects">ls projects</button>
+            <button class="cmd-btn" data-cmd="git log"      aria-label="Git log">git log</button>
+            <button class="cmd-btn" data-cmd="htop"         aria-label="htop">htop</button>
             <button class="cmd-btn" data-cmd="mail"         aria-label="Compose mail">mail</button>
             <button class="cmd-btn skip-btn" id="skip-btn" aria-label="Skip to portfolio">↓ skip to portfolio</button>
         </div>
