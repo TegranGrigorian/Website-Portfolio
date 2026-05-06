@@ -443,6 +443,12 @@
             max-height: 0 !important;
             opacity: 0;
         }
+        /* collapse stage height when terminal is minimized */
+        #term-stage.stage-minimized {
+            min-height: 0;
+            padding: 0;
+            align-items: flex-start;
+        }
 
         /* ── Page layout ── */
         body { margin: 0; padding: 0 0 3em; }
@@ -646,12 +652,15 @@
 
         /* ── Minimize / Maximize ── */
         let termMinimized = false;
+        const termStage = document.getElementById('term-stage');
         function minimizeTerminal() {
             termEl.classList.add('minimized');
+            termStage.classList.add('stage-minimized');
             termMinimized = true;
         }
         function maximizeTerminal() {
             termEl.classList.remove('minimized');
+            termStage.classList.remove('stage-minimized');
             termMinimized = false;
             input.focus();
         }
@@ -1297,38 +1306,22 @@ ${rows}
         }
 
         function doActualBoot() {
+            const termStageEl = document.getElementById('term-stage');
+            termStageEl.style.visibility = '';
             if (grubIdx === 1) {
-                /* Portfolio mode */
-                BOOT_LINES.forEach(({ text, color }) => {
-                    const d = document.createElement('div');
-                    d.className = 'term-line';
-                    d.style.color = color;
-                    d.innerHTML = text;
-                    bootEl.appendChild(d);
-                });
+                /* Portfolio mode — no terminal boot, just show content */
                 showContent();
                 sessionStorage.setItem('booted', 'true');
                 sessionStorage.setItem('portfolioVisible', 'true');
+                minimizeTerminal();
                 setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 200);
             } else {
-                /* Terminal mode */
-                if (booted) {
-                    BOOT_LINES.forEach(({ text, color }) => {
-                        const d = document.createElement('div');
-                        d.className = 'term-line';
-                        d.style.color = color;
-                        d.innerHTML = text;
-                        bootEl.appendChild(d);
-                    });
-                    if (sessionStorage.getItem('portfolioVisible') === 'true') showContent();
+                /* Terminal mode — show bash startup lines */
+                content.style.display = 'none';
+                runBoot(() => {
                     input.focus();
-                } else {
-                    content.style.display = 'none';
-                    runBoot(() => {
-                        input.focus();
-                        sessionStorage.setItem('booted', 'true');
-                    });
-                }
+                    sessionStorage.setItem('booted', 'true');
+                });
             }
         }
 
@@ -1343,6 +1336,8 @@ ${rows}
                 loadingLinesEl.innerHTML = '';
                 loadingScreen.style.display = 'flex';
                 loadingScreen.style.opacity = '1';
+                /* Also hide term-stage so terminal doesn't flash through */
+                document.getElementById('term-stage').style.visibility = 'hidden';
                 const bootAnim = [
                     { text: 'Woodix OS v1.0  \u2014 booting portfolio\u2026', color: '#83ff08',  delay: 0   },
                     { text: '[  OK  ] Loaded kernel modules.',              color: '#729fcf',  delay: 300 },
@@ -1377,7 +1372,7 @@ ${rows}
         if (sessionStorage.getItem('grubPassed') === 'true') {
             grubScreen.remove();
             if (booted) {
-                BOOT_LINES.forEach(({ text, color }) => {
+                TERM_BOOT_LINES.forEach(({ text, color }) => {
                     const d = document.createElement('div');
                     d.className = 'term-line';
                     d.style.color = color;
