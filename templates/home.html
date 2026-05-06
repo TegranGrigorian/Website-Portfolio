@@ -157,50 +157,11 @@
             font-family: inherit;
             font-size: 1em;
             outline: none;
-            min-width: 4em;
-            width: 12em; /* updated dynamically */
+            min-width: 2px;
+            width: 100%; /* JS overrides to content width when typing */
             padding: 0;
             caret-color: #83ff08;
-        }
-
-        /* ── Quick-command button strip ── */
-        .cmd-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5em;
-            padding: 0.7em 2em;
-            background: #131520;
-            border-top: 1px solid #2a2d3a;
-        }
-        .cmd-btn {
-            background: #1e2130;
-            color: #8aadf4;
-            border: 1px solid #2a2d3a;
-            border-radius: 0.4em;
-            padding: 0.3em 0.8em;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82em;
-            cursor: pointer;
-            transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
-        }
-        .cmd-btn:hover, .cmd-btn:focus {
-            background: #23203a;
-            color: #83ff08;
-            border-color: #83ff08;
-            box-shadow: 0 0 6px #83ff0844;
-            outline: none;
-        }
-        .skip-btn {
-            margin-left: auto;
-            background: #1e2130;
-            color: #fcaf3e;
-            border: 1px solid #fcaf3e44;
-        }
-        .skip-btn:hover, .skip-btn:focus {
-            background: #fcaf3e18;
-            color: #fcaf3e;
-            border-color: #fcaf3e;
-            box-shadow: 0 0 6px #fcaf3e44;
+            flex: 1;     /* fills wrapper when empty so placeholder shows */
         }
 
         /* ── neofetch layout ── */
@@ -425,13 +386,51 @@
         .git-msg    { color: #d3d7cf; padding-left: 1.2em; margin-top: 0.1em; }
         .git-msg-body { color: #888; padding-left: 1.2em; font-size: 0.9em; }
 
+        /* ── Loading screen (between GRUB and terminal) ── */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 9000;
+            background: #05070d;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            transition: opacity 0.3s ease;
+        }
+        .loading-logo {
+            color: #83ff08;
+            font-size: 2.6em;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-shadow: 0 0 24px #83ff0855;
+            margin-bottom: 0.7em;
+        }
+        .loading-bar-wrap {
+            width: min(300px, 70vw); height: 2px;
+            background: #1e2030; border-radius: 2px;
+            overflow: hidden; margin-bottom: 1.1em;
+        }
+        @keyframes loadingFill {
+            from { width: 0; } to { width: 100%; }
+        }
+        .loading-bar {
+            height: 100%; width: 0;
+            background: linear-gradient(90deg, #83ff08, #8aadf4);
+            border-radius: 2px;
+        }
+        .loading-msg { color: #555a7a; font-size: 0.78em; letter-spacing: 0.05em; }
+
+        /* ── Page centering ── */
+        body { margin: 0; padding: 1.5em 1.5em 3em; }
+        nav  { max-width: 820px; margin-left: auto; margin-right: auto; }
+        .terminal-landing { max-width: 820px; }
+
         /* ── Responsive ── */
         @media (max-width: 600px) {
+            body { padding: 0.5em; }
             .terminal-content { padding: 1em; }
             .ascii-art { font-size: 0.45em; }
             .neofetch-layout { flex-direction: column; align-items: center; }
-            .cmd-buttons { padding: 0.5em 1em; }
-            .skip-btn { margin-left: 0; }
             .term-full-card { flex-direction: column; }
             .term-card-thumb { width: 100%; height: 80px; }
         }
@@ -442,6 +441,13 @@
     <!-- ══════════════════════════════════════════
          GRUB-STYLE BOOT MENU
     ══════════════════════════════════════════ -->
+    <!-- Loading screen -->
+    <div id="loading-screen" role="status" aria-label="Loading" aria-live="polite">
+        <div class="loading-logo">WOODIX</div>
+        <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+        <div class="loading-msg" id="loading-msg">Booting…</div>
+    </div>
+
     <div id="grub-screen" role="dialog" aria-label="Boot menu" aria-modal="true">
         <div id="grub-inner">
             <div class="grub-header-line">
@@ -517,15 +523,7 @@
             <div id="tab-suggestions" role="listbox" aria-label="Tab completions"></div>
         </div>
 
-        <!-- quick-command buttons -->
-        <div class="cmd-buttons" role="toolbar" aria-label="Quick commands">
-            <button class="cmd-btn" data-cmd="help"         aria-label="Show help">help</button>
-            <button class="cmd-btn" data-cmd="ls projects"  aria-label="List projects">ls projects</button>
-            <button class="cmd-btn" data-cmd="git log"      aria-label="Git log">git log</button>
-            <button class="cmd-btn" data-cmd="htop"         aria-label="htop">htop</button>
-            <button class="cmd-btn" data-cmd="mail"         aria-label="Compose mail">mail</button>
-            <button class="cmd-btn skip-btn" id="skip-btn" aria-label="Skip to portfolio">↓ skip to portfolio</button>
-        </div>
+
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -635,8 +633,10 @@
         const form        = document.getElementById('terminal-form');
         const bootEl      = document.getElementById('boot-lines');
         const content     = document.getElementById('portfolio-content');
-        const skipBtn     = document.getElementById('skip-btn');
         const termContent = document.getElementById('terminal-content');
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingBar    = document.getElementById('loading-bar');
+        const loadingMsg    = document.getElementById('loading-msg');
         const ghostEl     = document.getElementById('ghost-text');
         const mirrorEl    = document.getElementById('input-mirror');
         const tabSugEl    = document.getElementById('tab-suggestions');
@@ -678,16 +678,25 @@
             'ls', 'ls projects', 'ls experience', 'ls skills',
             'cat about', 'cat projects', 'cat experience',
             'git log', 'htop',
-            'clear', 'contact', 'mail', 'open github', 'open linkedin',
+            'clear', 'skip', 'contact', 'mail', 'open github', 'open linkedin',
+            'exit', 'reboot', 'sudo shutdown now',
         ];
 
         let tabMatches = [];
         let tabIdx = -1;
 
         function updateInputWidth() {
-            mirrorEl.textContent = input.value || '';
-            const w = mirrorEl.offsetWidth;
-            input.style.width = Math.max(w + 6, 64) + 'px';
+            const val = input.value;
+            mirrorEl.textContent = val;
+            if (!val) {
+                // Empty: let input fill wrapper so placeholder shows; ghost is empty anyway
+                input.style.flex  = '1';
+                input.style.width = '';
+            } else {
+                // Typing: shrink input to exact text width so ghost sits right after
+                input.style.flex  = '0 0 auto';
+                input.style.width = (mirrorEl.offsetWidth + 4) + 'px';
+            }
         }
 
         function updateGhost() {
@@ -847,12 +856,16 @@
             'cat about':    cmdCatAbout,
             'cat projects': cmdLsProjects,
             'cat experience':cmdLsExperience,
-            'clear':        cmdClear,
-            'contact':      cmdMail,
-            'mail':         cmdMail,
-            'ls skills':    cmdLsSkills,
-            'git log':      cmdGitLog,
-            'htop':         cmdHtop,
+            'clear':              cmdClear,
+            'skip':               cmdSkip,
+            'contact':            cmdMail,
+            'mail':               cmdMail,
+            'ls skills':          cmdLsSkills,
+            'git log':            cmdGitLog,
+            'htop':               cmdHtop,
+            'exit':               cmdReboot,
+            'reboot':             cmdReboot,
+            'sudo shutdown now':  cmdReboot,
             'open github':  () => window.open('https://github.com/TegranGrigorian', '_blank'),
             'open linkedin':() => window.open('https://www.linkedin.com/in/tegran-grigorian/', '_blank'),
         };
@@ -885,7 +898,9 @@
   <tr><td>ls skills</td><td>List skills as Unix files</td></tr>
   <tr><td>git log</td><td>Commit history — career milestones</td></tr>
   <tr><td>htop</td><td>Skills as running processes w/ CPU bars</td></tr>
+  <tr><td>skip</td><td>Skip to classic portfolio view</td></tr>
   <tr><td>contact / mail</td><td>Compose &amp; send a message (multi-step)</td></tr>
+  <tr><td>exit / reboot</td><td>Return to GRUB boot menu</td></tr>
   <tr><td>open github</td><td>Open GitHub profile</td></tr>
   <tr><td>open linkedin</td><td>Open LinkedIn profile</td></tr>
   <tr><td>clear</td><td>Clear terminal</td></tr>
@@ -1083,6 +1098,23 @@
             history.innerHTML = '';
         }
 
+        function cmdSkip() {
+            showContent();
+            setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 100);
+        }
+
+        function cmdReboot() {
+            appendLine(`<span style="color:#729fcf;">[  OK  ] Stopping session services…</span>`);
+            setTimeout(() => appendLine(`<span style="color:#729fcf;">[  OK  ] Unmounting /home/tegran…</span>`), 280);
+            setTimeout(() => appendLine(`<span style="color:#83ff08;">[  OK  ] Returning to boot menu.</span>`), 560);
+            setTimeout(() => {
+                sessionStorage.removeItem('grubPassed');
+                sessionStorage.removeItem('booted');
+                sessionStorage.removeItem('portfolioVisible');
+                window.location.reload();
+            }, 1050);
+        }
+
         /* ── ls skills ── */
         function cmdLsSkills() {
             const files = [
@@ -1244,14 +1276,23 @@ ${rows}
             grubIdx = idx;
         }
 
-        function grubBoot() {
-            clearInterval(grubInterval);
-            grubScreen.style.transition = 'opacity 0.35s ease';
-            grubScreen.style.opacity = '0';
-            setTimeout(() => {
-                grubScreen.remove();
-                if (grubIdx === 1) {
-                    /* Portfolio mode */
+        function doActualBoot() {
+            if (grubIdx === 1) {
+                /* Portfolio mode */
+                BOOT_LINES.forEach(({ text, color }) => {
+                    const d = document.createElement('div');
+                    d.className = 'term-line';
+                    d.style.color = color;
+                    d.innerHTML = text;
+                    bootEl.appendChild(d);
+                });
+                showContent();
+                sessionStorage.setItem('booted', 'true');
+                sessionStorage.setItem('portfolioVisible', 'true');
+                setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 200);
+            } else {
+                /* Terminal mode */
+                if (booted) {
                     BOOT_LINES.forEach(({ text, color }) => {
                         const d = document.createElement('div');
                         d.className = 'term-line';
@@ -1259,31 +1300,44 @@ ${rows}
                         d.innerHTML = text;
                         bootEl.appendChild(d);
                     });
-                    showContent();
-                    sessionStorage.setItem('booted', 'true');
-                    sessionStorage.setItem('portfolioVisible', 'true');
-                    document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+                    if (sessionStorage.getItem('portfolioVisible') === 'true') showContent();
+                    input.focus();
                 } else {
-                    /* Terminal mode */
-                    if (booted) {
-                        BOOT_LINES.forEach(({ text, color }) => {
-                            const d = document.createElement('div');
-                            d.className = 'term-line';
-                            d.style.color = color;
-                            d.innerHTML = text;
-                            bootEl.appendChild(d);
-                        });
-                        if (sessionStorage.getItem('portfolioVisible') === 'true') showContent();
+                    content.style.display = 'none';
+                    runBoot(() => {
                         input.focus();
-                    } else {
-                        content.style.display = 'none';
-                        runBoot(() => {
-                            input.focus();
-                            sessionStorage.setItem('booted', 'true');
-                        });
-                    }
+                        sessionStorage.setItem('booted', 'true');
+                    });
                 }
-            }, 360);
+            }
+        }
+
+        function grubBoot() {
+            clearInterval(grubInterval);
+            /* 1. Fade out GRUB */
+            grubScreen.style.transition = 'opacity 0.28s ease';
+            grubScreen.style.opacity = '0';
+            setTimeout(() => {
+                grubScreen.remove();
+                /* 2. Show loading screen */
+                loadingMsg.textContent = grubIdx === 1 ? 'Loading portfolio…' : 'Booting Woodix terminal…';
+                loadingBar.style.animation = 'none';
+                void loadingBar.offsetWidth; /* force reflow to restart animation */
+                loadingBar.style.animation = 'loadingFill 0.85s ease-in-out forwards';
+                loadingScreen.style.display = 'flex';
+                loadingScreen.style.opacity = '1';
+                /* 3. After bar fills, fade out loading screen then boot */
+                setTimeout(() => {
+                    loadingScreen.style.transition = 'opacity 0.3s ease';
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        loadingScreen.style.transition = '';
+                        loadingScreen.style.opacity = '1';
+                        doActualBoot();
+                    }, 320);
+                }, 900);
+            }, 290);
         }
 
         /* Show GRUB on every fresh page load; skip only if flag set this session */
@@ -1497,26 +1551,6 @@ ${rows}
             cmdHistory.push(raw.trim());
             histIdx = -1;
             runCmd(raw);
-        });
-
-        /* ── Button strip ── */
-        document.querySelectorAll('.cmd-btn[data-cmd]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const raw = btn.dataset.cmd;
-                cmdHistory.push(raw);
-                histIdx = -1;
-                input.value = '';
-                ghostEl.textContent = '';
-                updateInputWidth();
-                runCmd(raw);
-                input.focus();
-            });
-        });
-
-        /* ── Skip button ── */
-        skipBtn.addEventListener('click', () => {
-            showContent();
-            setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 100);
         });
 
         /* ── Click terminal body to refocus input ── */
