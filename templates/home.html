@@ -743,21 +743,21 @@
         <section id="projects" style="max-width:960px; margin:2em auto; background:#181a20; border-radius:1em; padding:2em; box-shadow:0 2px 16px #0002;">
             <h2 class="term-green" style="margin-top:0;"><span class="section-heading-ascii">~/projects</span></h2>
             <div style="display:flex; flex-wrap:wrap; gap:2em;">
-                <!-- Large project 1 -->
+                <!-- Large project 1: Circuity -->
+                <div style="flex:1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_circuity.png') }}" alt="Circuity Circuit Simulator" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-magenta" style="margin:0.7em 0 0.3em 0;">Circuity — Browser Circuit Simulator</h3>
+                    <p>A full-stack circuit simulator powered by a SPICE-based Python backend engine. Draw, wire, and simulate analog circuits in the browser with a React TypeScript frontend. Supports real-time node analysis, component libraries, and persistent simulation state via SQL.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-js">TypeScript</span>, <span class="term-flask">Python</span>, <span class="term-sqlite">SQL</span>, <span class="term-mavlink">Linux</span>, <span class="term-git">Git</span></div>
+                    <a href="https://circuity.tegrangrigorian.work" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#8308ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">Live Demo</a>
+                </div>
+                <!-- Large project 2: Woodix -->
                 <div style="flex:1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
                     <img src="{{ url_for('static', filename='images/project_1.png') }}" alt="Woodix Kernel" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
                     <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">"Woodix" — Kernel from Scratch</h3>
                     <p>A custom kernel written in C, Rust, and Assembly; a re-implementation of the first version of Linux. I learned to build a bootloader, filesystem, scheduler, linkers, loaders, and system calls. I plan to expand into CUDA drivers, compilers, and advanced kernels.</p>
                     <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-rust">Rust</span>, <span class="term-cpp">C</span>, <span class="term-assem">Assembly</span>, <span class="term-gnu">GNU</span></div>
                     <a href="https://github.com/TegranGrigorian/Woodix" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
-                </div>
-                <!-- Large project 2 -->
-                <div style="flex:1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_2.jpg') }}" alt="Autonomous Drone" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
-                    <h3 class="term-magenta" style="margin:0.7em 0 0.3em 0;">Autonomous Drone Delivery System</h3>
-                    <p>Automated drone delivery of medical supplies using a Flightory Stallion VTOL paired with a Jetson Nano companion computer. A YOLO model detects landing zones autonomously. Plan to open-source with full docs.</p>
-                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-python">Python</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-docker">Docker</span>, <span class="term-js">JavaScript</span>, <span class="term-bash">Shell</span>, <span class="term-git">ROS</span>, <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span></div>
-                    <a href="https://github.com/TegranGrigorian/autonomous-drone-delivery" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#ff8308; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
                 <!-- Smaller projects -->
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
@@ -775,11 +775,24 @@
                     <a href="https://github.com/TegranGrigorian/yt-to-mp3-4" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_5.png') }}" alt="FRC Swerve" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
-                    <h3 class="term-yellow" style="margin:0.7em 0 0.3em 0;">FRC Swerve Drive Code</h3>
-                    <p>Drive and autonomous code for an FRC swerve-drive competition robot. Taught fast-response code patterns and source control discipline in Java.</p>
-                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-java">Java</span>, <span class="term-git">Git</span></div>
-                    <a href="https://github.com/TegranGrigorian/216-FRC-" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#8308ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                    <img src="{{ url_for('static', filename='images/project_rat.png') }}" alt="RAT Archive Tool" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-rust" style="margin:0.7em 0 0.3em 0;">RAT — Rusty Archive Tool</h3>
+                    <p>A Rust-native CLI wrapper around tar that makes archive management intuitive with short, memorable subcommands and clean output.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-rust">Rust</span>, <span class="term-mavlink">Linux</span>, <span class="term-git">Git</span></div>
+                    <div style="display:flex; gap:0.5em; margin-top:auto; flex-wrap:wrap;">
+                        <a href="https://github.com/TegranGrigorian/RAT" target="_blank" rel="noopener" style="background:#181a20; color:#dea584; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                        <a href="https://rat.tegrangrigorian.work/" target="_blank" rel="noopener" style="background:#181a20; color:#555a7a; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">Live Demo</a>
+                    </div>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_nbody.png') }}" alt="N-Body Simulator" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-cyan" style="margin:0.7em 0 0.3em 0;">N-Body Gravitational Simulator</h3>
+                    <p>An interactive gravitational simulator for visualising three-body problems. C++ engine compiled as a Python extension module, importable as a library or driven by a tkinter GUI.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-cpp">C++</span>, <span class="term-python">Python</span>, <span class="term-git">Git</span></div>
+                    <div style="display:flex; gap:0.5em; margin-top:auto; flex-wrap:wrap;">
+                        <a href="https://github.com/TegranGrigorian/nbody-gui" target="_blank" rel="noopener" style="background:#181a20; color:#08ff83; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                        <a href="https://nbody.tegrangrigorian.work/" target="_blank" rel="noopener" style="background:#181a20; color:#555a7a; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">Live Demo</a>
+                    </div>
                 </div>
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
                     <img src="{{ url_for('static', filename='images/project_6.jpg') }}" alt="Trains++" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
@@ -801,6 +814,20 @@
                     <p>A multithreaded Rust tool that scans and organises TikTok media from Android phones using metadata analysis, cross-platform (Linux + Windows).</p>
                     <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span></div>
                     <a href="https://github.com/TegranGrigorian/tiktok-cleaner" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_egr227.png') }}" alt="EGR227 Arcade Machine" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-yellow" style="margin:0.7em 0 0.3em 0;">EGR227 — PIC18 Arcade Machine</h3>
+                    <p>A microcontroller course capstone — a fully playable arcade machine built around a PIC18F56Q71 with real-time input, 7-segment LED scoring, and bare-metal C game logic.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-cpp">C</span>, <span class="term-git">Git</span></div>
+                    <a href="https://github.com/TegranGrigorian/EGR227-Final-Project" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#fcaf3e; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                </div>
+                <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_5.png') }}" alt="FRC Swerve" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-yellow" style="margin:0.7em 0 0.3em 0;">FRC Swerve Drive Code</h3>
+                    <p>Drive and autonomous code for an FRC swerve-drive competition robot. Taught fast-response code patterns and source control discipline in Java.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-java">Java</span>, <span class="term-git">Git</span></div>
+                    <a href="https://github.com/TegranGrigorian/216-FRC-" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#8308ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
             </div>
         </section>
@@ -1207,6 +1234,15 @@
         function cmdLsProjects() {
             const projects = [
                 {
+                    img: '/static/images/project_circuity.png',
+                    color: '#8308ff',
+                    borderColor: '#8308ff',
+                    title: 'Circuity — Browser Circuit Simulator',
+                    desc: 'A full-stack circuit simulator powered by a SPICE-based Python backend engine. Draw, wire, and simulate analog circuits in the browser with a React TypeScript frontend. Supports real-time node analysis, component libraries, and persistent simulation state via SQL.',
+                    stack: `<span class="term-js">TypeScript</span>, <span class="term-flask">Python</span>, <span class="term-sqlite">SQL</span>, <span class="term-mavlink">Linux</span>, <span class="term-git">Git</span>`,
+                    url: 'https://circuity.tegrangrigorian.work',
+                },
+                {
                     img: '/static/images/project_1.png',
                     color: '#729fcf',
                     borderColor: '#729fcf',
@@ -1214,15 +1250,6 @@
                     desc: 'A custom kernel in C, Rust, and Assembly — re-implementation of the first Linux. Bootloader, filesystem, scheduler, linkers, loaders, syscalls. Expanding into CUDA drivers, compilers, and advanced kernels.',
                     stack: `<span class="term-rust">Rust</span>, <span class="term-cpp">C</span>, <span class="term-assem">Assembly</span>, <span class="term-gnu">GNU</span>`,
                     url: 'https://github.com/TegranGrigorian/Woodix',
-                },
-                {
-                    img: '/static/images/project_2.jpg',
-                    color: '#ff8308',
-                    borderColor: '#ff8308',
-                    title: 'Autonomous Drone Delivery System',
-                    desc: 'VTOL drone + Jetson Nano companion computer running a YOLO model for landing zone detection. Fully autonomous medical supply delivery. Plan to open-source with docs.',
-                    stack: `<span class="term-python">Python</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-docker">Docker</span>, <span class="term-git">ROS</span>, <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span>`,
-                    url: 'https://github.com/TegranGrigorian/autonomous-drone-delivery',
                 },
                 {
                     img: '/static/images/project_3.png',
@@ -1243,13 +1270,22 @@
                     url: 'https://github.com/TegranGrigorian/yt-to-mp3-4',
                 },
                 {
-                    img: '/static/images/project_5.png',
-                    color: '#ff8308',
-                    borderColor: '#ff8308',
-                    title: 'FRC Swerve Drive Code',
-                    desc: 'Drive and autonomous code for an FRC swerve-drive competition robot. Fast-response code patterns and source control discipline in Java.',
-                    stack: `<span class="term-java">Java</span>, <span class="term-git">Git</span>`,
-                    url: 'https://github.com/TegranGrigorian/216-FRC-',
+                    img: '/static/images/project_rat.png',
+                    color: '#dea584',
+                    borderColor: '#dea584',
+                    title: 'RAT — Rusty Archive Tool',
+                    desc: 'A Rust-native CLI wrapper around tar that makes archive management intuitive. Replaces verbose tar flags with short, memorable subcommands and clean output. Installable on any Linux system via a one-line shell script.',
+                    stack: `<span class="term-rust">Rust</span>, <span class="term-mavlink">Linux</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/RAT',
+                },
+                {
+                    img: '/static/images/project_nbody.png',
+                    color: '#08ff83',
+                    borderColor: '#08ff83',
+                    title: 'N-Body Gravitational Simulator',
+                    desc: 'An interactive n-body gravitational simulator for visualising three-body and multi-body problems. The simulation core is a C++ engine compiled as a Python extension module, importable as a library or driven by a tkinter GUI.',
+                    stack: `<span class="term-cpp">C++</span>, <span class="term-python">Python</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/nbody-gui',
                 },
                 {
                     img: '/static/images/project_6.jpg',
@@ -1277,6 +1313,24 @@
                     desc: 'Multithreaded Rust tool that scans and organises TikTok media from Android phones using metadata analysis. Cross-platform (Linux + Windows).',
                     stack: `<span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>`,
                     url: 'https://github.com/TegranGrigorian/tiktok-cleaner',
+                },
+                {
+                    img: '/static/images/project_egr227.png',
+                    color: '#fcaf3e',
+                    borderColor: '#fcaf3e',
+                    title: 'EGR227 — PIC18 Arcade Machine',
+                    desc: 'A microcontroller course capstone — a fully playable arcade machine built around a PIC18F56Q71. Handles real-time input scanning, score display on 7-segment LEDs, and all game logic in bare-metal C with no OS or RTOS.',
+                    stack: `<span class="term-cpp">C</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/EGR227-Final-Project',
+                },
+                {
+                    img: '/static/images/project_5.png',
+                    color: '#ff8308',
+                    borderColor: '#ff8308',
+                    title: 'FRC Swerve Drive Code',
+                    desc: 'Drive and autonomous code for an FRC swerve-drive competition robot. Fast-response code patterns and source control discipline in Java.',
+                    stack: `<span class="term-java">Java</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/216-FRC-',
                 },
             ];
 
