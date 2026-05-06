@@ -378,7 +378,7 @@
             <!-- prompt row -->
             <form id="terminal-form" autocomplete="off" aria-label="Terminal input">
                 <div class="terminal-prompt">
-                    <span style="color:#83ff08;" aria-hidden="true">tegran@portfolio</span><span style="color:#555a7a;" aria-hidden="true">:</span><span style="color:#8aadf4;" aria-hidden="true">~</span><span style="color:#d3d7cf;" aria-hidden="true">$</span>
+                    <span id="prompt-prefix" aria-hidden="true"><span style="color:#83ff08;">tegran@portfolio</span><span style="color:#555a7a;">:</span><span style="color:#8aadf4;">~</span><span style="color:#d3d7cf;">$</span></span>
                     <div class="input-area-wrapper">
                         <span id="input-mirror" class="input-mirror" aria-hidden="true"></span>
                         <input id="terminal-input" class="terminal-input" type="text"
@@ -403,6 +403,7 @@
             <button class="cmd-btn" data-cmd="whoami"      aria-label="whoami">whoami</button>
             <button class="cmd-btn" data-cmd="uname -a"    aria-label="uname">uname -a</button>
             <button class="cmd-btn" data-cmd="contact"     aria-label="Show contact">contact</button>
+            <button class="cmd-btn" data-cmd="mail"         aria-label="Compose mail">mail</button>
             <button class="cmd-btn skip-btn" id="skip-btn" aria-label="Skip to portfolio">↓ skip to portfolio</button>
         </div>
     </div>
@@ -520,6 +521,11 @@
         const mirrorEl    = document.getElementById('input-mirror');
         const tabSugEl    = document.getElementById('tab-suggestions');
 
+        /* ── Mail form state (declared early so keydown can reference it) ── */
+        let formActive = false;   // false | true | 'confirm'
+        let formStep   = 0;
+        let formData   = {};
+
         /* ── Helpers ── */
         function appendLine(html, cls = '') {
             const d = document.createElement('div');
@@ -551,7 +557,7 @@
             'help', 'neofetch', 'whoami', 'pwd', 'uname -a',
             'ls', 'ls projects', 'ls experience',
             'cat about', 'cat projects', 'cat experience',
-            'clear', 'contact', 'open github', 'open linkedin',
+            'clear', 'contact', 'mail', 'open github', 'open linkedin',
         ];
 
         let tabMatches = [];
@@ -698,7 +704,8 @@
             'cat projects': cmdLsProjects,
             'cat experience':cmdLsExperience,
             'clear':        cmdClear,
-            'contact':      cmdContact,
+            'contact':      cmdMail,
+            'mail':         cmdMail,
             'open github':  () => window.open('https://github.com/TegranGrigorian', '_blank'),
             'open linkedin':() => window.open('https://www.linkedin.com/in/tegran-grigorian/', '_blank'),
         };
@@ -728,11 +735,11 @@
   <tr><td>ls projects</td><td>Full project cards with details</td></tr>
   <tr><td>ls experience</td><td>Full experience entries</td></tr>
   <tr><td>cat about</td><td>Read about me</td></tr>
-  <tr><td>contact</td><td>Show contact info &amp; scroll to form</td></tr>
+  <tr><td>contact / mail</td><td>Compose &amp; send a message (multi-step)</td></tr>
   <tr><td>open github</td><td>Open GitHub profile</td></tr>
   <tr><td>open linkedin</td><td>Open LinkedIn profile</td></tr>
   <tr><td>clear</td><td>Clear terminal</td></tr>
-  <tr><td colspan="2" style="color:#555a7a; padding-top:0.5em;">↹ Tab &nbsp;— autocomplete &nbsp;|&nbsp; ↑↓ &nbsp;— history &nbsp;|&nbsp; → &nbsp;— accept ghost</td></tr>
+  <tr><td colspan="2" style="color:#555a7a; padding-top:0.5em;">↹ Tab — autocomplete &nbsp;|&nbsp; ↑↓ — history &nbsp;|&nbsp; → — accept ghost &nbsp;|&nbsp; Ctrl+L — clear &nbsp;|&nbsp; Ctrl+C — cancel</td></tr>
 </table></div>`);
         }
 
@@ -920,15 +927,7 @@
 </div>`);
         }
 
-        function cmdContact() {
-            appendLine(`<div class="term-output-block" style="border-left:3px solid #fcaf3e; padding-left:1em;">
-  <span style="color:#fcaf3e;">GitHub</span>:   <a href="https://github.com/TegranGrigorian" target="_blank" rel="noopener" style="color:#8aadf4;">github.com/TegranGrigorian</a><br>
-  <span style="color:#fcaf3e;">LinkedIn</span>: <a href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank" rel="noopener" style="color:#8aadf4;">linkedin.com/in/tegran-grigorian</a><br>
-  <span style="color:#fcaf3e;">Email</span>:    <span style="color:#83ff08;">Use the contact form ↓</span>
-</div>`);
-            showContent();
-            setTimeout(() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }), 400);
-        }
+        function cmdContact() { cmdMail(); }
 
         function cmdClear() {
             history.innerHTML = '';
