@@ -84,7 +84,6 @@
             min-height: 320px;
             max-height: 70vh;
             overflow-y: auto;
-            scroll-behavior: smooth;
         }
 
         /* ── ASCII art header ── */
@@ -896,7 +895,10 @@
             d.className = 'term-line ' + cls;
             d.innerHTML = html;
             history.appendChild(d);
-            termContent.scrollTop = termContent.scrollHeight;
+            requestAnimationFrame(() => {
+                termContent.scrollTop = termContent.scrollHeight;
+                form.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+            });
         }
 
         function echoCmd(cmd) {
@@ -1495,7 +1497,10 @@ ${rows}
                     d.style.color = color;
                     d.innerHTML = text;
                     bootEl.appendChild(d);
-                    termContent.scrollTop = termContent.scrollHeight;
+                    requestAnimationFrame(() => {
+                        termContent.scrollTop = termContent.scrollHeight;
+                        form.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+                    });
                 }, delay);
             });
             setTimeout(cb, 900);
@@ -1730,7 +1735,10 @@ ${rows}
                 mailEditorEl.style.display = 'block';
                 mailEditorTA.value = '';
                 mailEditorTA.placeholder = 'Write your message here…\n\nPress Enter for a new line.\nCtrl+K to insert a link.\nCtrl+Enter (or the Send button) to submit.';
-                termContent.scrollTop = termContent.scrollHeight;
+                requestAnimationFrame(() => {
+                    termContent.scrollTop = termContent.scrollHeight;
+                    mailEditorEl.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+                });
                 setTimeout(() => mailEditorTA.focus(), 30);
             } else {
                 setFormPrompt(`[${formStep + 1}/${FORM_STEPS.length}] ${step.label}`);
