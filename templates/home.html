@@ -546,55 +546,193 @@
             sessionStorage.setItem('portfolioVisible', 'true');
         }
 
+        /* ── Tab autocomplete ── */
+        const ALL_CMDS = [
+            'help', 'neofetch', 'whoami', 'pwd', 'uname -a',
+            'ls', 'ls projects', 'ls experience',
+            'cat about', 'cat projects', 'cat experience',
+            'clear', 'contact', 'open github', 'open linkedin',
+        ];
+
+        let tabMatches = [];
+        let tabIdx = -1;
+
+        function updateInputWidth() {
+            mirrorEl.textContent = input.value || '';
+            const w = mirrorEl.offsetWidth;
+            input.style.width = Math.max(w + 6, 64) + 'px';
+        }
+
+        function updateGhost() {
+            const typed = input.value;
+            if (!typed) { ghostEl.textContent = ''; return; }
+            const match = ALL_CMDS.find(c =>
+                c.toLowerCase().startsWith(typed.toLowerCase()) &&
+                c.toLowerCase() !== typed.toLowerCase()
+            );
+            ghostEl.textContent = match ? match.slice(typed.length) : '';
+        }
+
+        function showTabSuggestions(matches, activeIdx) {
+            if (matches.length <= 1) { tabSugEl.style.display = 'none'; return; }
+            tabSugEl.innerHTML = matches.map((m, i) =>
+                `<span class="tab-sug-item${i === activeIdx ? ' active' : ''}" data-cmd="${escHtml(m)}">${escHtml(m)}</span>`
+            ).join('');
+            tabSugEl.style.display = 'flex';
+            tabSugEl.querySelectorAll('.tab-sug-item').forEach(el => {
+                el.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    input.value = el.dataset.cmd;
+                    updateInputWidth();
+                    updateGhost();
+                    hideSuggestions();
+                    input.focus();
+                });
+            });
+        }
+
+        function hideSuggestions() {
+            tabSugEl.style.display = 'none';
+            tabMatches = [];
+            tabIdx = -1;
+        }
+
+        input.addEventListener('input', function () {
+            tabMatches = [];
+            tabIdx = -1;
+            hideSuggestions();
+            updateInputWidth();
+            updateGhost();
+        });
+
+        input.addEventListener('keydown', function (e) {
+
+            /* ── Tab completion ── */
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const typed = input.value;
+                if (tabMatches.length === 0) {
+                    tabMatches = ALL_CMDS.filter(c => c.toLowerCase().startsWith(typed.toLowerCase()));
+                }
+                if (tabMatches.length === 0) return;
+                if (tabMatches.length === 1) {
+                    // Only one match — complete immediately
+                    input.value = tabMatches[0];
+                    tabIdx = 0;
+                    hideSuggestions();
+                } else {
+                    // Cycle through matches
+                    tabIdx = (tabIdx + 1) % tabMatches.length;
+                    input.value = tabMatches[tabIdx];
+                    showTabSuggestions(tabMatches, tabIdx);
+                }
+                updateInputWidth();
+                updateGhost();
+                return;
+            }
+
+            /* ── Accept inline ghost on ArrowRight at end ── */
+            if (e.key === 'ArrowRight' && ghostEl.textContent &&
+                input.selectionStart === input.value.length) {
+                e.preventDefault();
+                input.value += ghostEl.textContent;
+                ghostEl.textContent = '';
+                updateInputWidth();
+                return;
+            }
+
+            /* ── History navigation ── */
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (histIdx < cmdHistory.length - 1) {
+                    histIdx++;
+                    input.value = cmdHistory[cmdHistory.length - 1 - histIdx];
+                    updateInputWidth();
+                    updateGhost();
+                }
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (histIdx > 0) {
+                    histIdx--;
+                    input.value = cmdHistory[cmdHistory.length - 1 - histIdx];
+                } else {
+                    histIdx = -1;
+                    input.value = '';
+                }
+                updateInputWidth();
+                updateGhost();
+                return;
+            }
+
+            /* ── Escape clears input and suggestions ── */
+            if (e.key === 'Escape') {
+                input.value = '';
+                ghostEl.textContent = '';
+                hideSuggestions();
+                updateInputWidth();
+                return;
+            }
+
+            /* reset tab cycle on any typing key */
+            if (e.key !== 'Tab' && e.key !== 'Shift') {
+                if (tabMatches.length > 0 && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+                    hideSuggestions();
+                }
+            }
+        });
+
         /* ── Command definitions ── */
         const COMMANDS = {
-            'help': cmdHelp,
-            'neofetch': cmdNeofetch,
-            'whoami': cmdWhoami,
-            'pwd': cmdPwd,
-            'uname': cmdUname,
-            'uname -a': cmdUname,
-            'ls': cmdLs,
-            'ls projects': () => cmdLsDir('projects'),
-            'ls experience': () => cmdLsDir('experience'),
-            'cat about': cmdCatAbout,
-            'cat projects': () => cmdLsDir('projects'),
-            'cat experience': () => cmdLsDir('experience'),
-            'clear': cmdClear,
-            'contact': cmdContact,
-            'open github': () => window.open('https://github.com/TegranGrigorian', '_blank'),
-            'open linkedin': () => window.open('https://www.linkedin.com/in/tegran-grigorian/', '_blank'),
+            'help':         cmdHelp,
+            'neofetch':     cmdNeofetch,
+            'whoami':       cmdWhoami,
+            'pwd':          cmdPwd,
+            'uname':        cmdUname,
+            'uname -a':     cmdUname,
+            'ls':           cmdLs,
+            'ls projects':  cmdLsProjects,
+            'ls experience':cmdLsExperience,
+            'cat about':    cmdCatAbout,
+            'cat projects': cmdLsProjects,
+            'cat experience':cmdLsExperience,
+            'clear':        cmdClear,
+            'contact':      cmdContact,
+            'open github':  () => window.open('https://github.com/TegranGrigorian', '_blank'),
+            'open linkedin':() => window.open('https://www.linkedin.com/in/tegran-grigorian/', '_blank'),
         };
 
         function runCmd(raw) {
             const cmd = raw.trim().toLowerCase();
             if (!cmd) return;
             echoCmd(raw.trim());
-
+            hideSuggestions();
+            ghostEl.textContent = '';
             if (COMMANDS[cmd]) {
                 COMMANDS[cmd]();
             } else {
                 appendLine(`<span style="color:#ff5f56;">bash: ${escHtml(raw.trim())}: command not found</span><br><span style="color:#b39ddb;">Try <span style="color:#83ff08;">help</span> to see available commands.</span>`);
             }
-            showContent();
         }
 
-        /* ── Individual commands ── */
+        /* ── Commands ── */
         function cmdHelp() {
             appendLine(`<div class="term-output-block">
 <table class="help-table" aria-label="Available commands">
-  <tr><td>neofetch</td><td>Show profile info</td></tr>
+  <tr><td>neofetch</td><td>Show profile &amp; system info</td></tr>
   <tr><td>whoami</td><td>Who am I?</td></tr>
   <tr><td>pwd</td><td>Print current directory</td></tr>
   <tr><td>uname -a</td><td>System info</td></tr>
-  <tr><td>ls</td><td>List root directory</td></tr>
-  <tr><td>ls projects</td><td>List all projects</td></tr>
-  <tr><td>ls experience</td><td>List experience</td></tr>
+  <tr><td>ls</td><td>List home directory</td></tr>
+  <tr><td>ls projects</td><td>Full project cards with details</td></tr>
+  <tr><td>ls experience</td><td>Full experience entries</td></tr>
   <tr><td>cat about</td><td>Read about me</td></tr>
-  <tr><td>contact</td><td>Show contact info</td></tr>
+  <tr><td>contact</td><td>Show contact info &amp; scroll to form</td></tr>
   <tr><td>open github</td><td>Open GitHub profile</td></tr>
   <tr><td>open linkedin</td><td>Open LinkedIn profile</td></tr>
   <tr><td>clear</td><td>Clear terminal</td></tr>
+  <tr><td colspan="2" style="color:#555a7a; padding-top:0.5em;">↹ Tab &nbsp;— autocomplete &nbsp;|&nbsp; ↑↓ &nbsp;— history &nbsp;|&nbsp; → &nbsp;— accept ghost</td></tr>
 </table></div>`);
         }
 
@@ -648,48 +786,149 @@
 </div>`);
         }
 
-        function cmdLsDir(dir) {
-            if (dir === 'projects') {
-                appendLine(`<div class="term-project-list">
-  <div class="term-project-item"><span style="color:#729fcf;">woodix/</span> — Custom kernel in C, Rust, Assembly</div>
-  <div class="term-project-item"><span style="color:#ff8308;">autonomous-drone/</span> — VTOL + Jetson Nano + YOLO delivery system</div>
-  <div class="term-project-item"><span style="color:#83ff08;">website-portfolio/</span> — This site (Flask + terminal UI)</div>
-  <div class="term-project-item"><span style="color:#08ff83;">yt-mp3-4/</span> — YouTube downloader in Rust</div>
-  <div class="term-project-item"><span style="color:#ff8308;">frc-swerve/</span> — FRC swerve drive robot code</div>
-  <div class="term-project-item"><span style="color:#ff0883;">trains-plus-plus/</span> — Satisfactory game mod</div>
-  <div class="term-project-item"><span style="color:#83ff08;">vex-ai/</span> — Vex AI World Championship robot</div>
-  <div class="term-project-item"><span style="color:#729fcf;">tiktok-cleaner/</span> — Multithreaded Rust media organiser</div>
-  <br><span style="color:#b39ddb;">Scroll down or use the nav to view full project cards ↓</span>
+        /* Full project cards rendered inside terminal */
+        function cmdLsProjects() {
+            const projects = [
+                {
+                    img: '/static/images/project_1.png',
+                    color: '#729fcf',
+                    borderColor: '#729fcf',
+                    title: '"Woodix" — Kernel from Scratch',
+                    desc: 'A custom kernel in C, Rust, and Assembly — re-implementation of the first Linux. Bootloader, filesystem, scheduler, linkers, loaders, syscalls. Expanding into CUDA drivers, compilers, and advanced kernels.',
+                    stack: `<span class="term-rust">Rust</span>, <span class="term-cpp">C</span>, <span class="term-assem">Assembly</span>, <span class="term-gnu">GNU</span>`,
+                    url: 'https://github.com/TegranGrigorian/Woodix',
+                },
+                {
+                    img: '/static/images/project_2.jpg',
+                    color: '#ff8308',
+                    borderColor: '#ff8308',
+                    title: 'Autonomous Drone Delivery System',
+                    desc: 'VTOL drone + Jetson Nano companion computer running a YOLO model for landing zone detection. Fully autonomous medical supply delivery. Plan to open-source with docs.',
+                    stack: `<span class="term-python">Python</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-docker">Docker</span>, <span class="term-git">ROS</span>, <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span>`,
+                    url: 'https://github.com/TegranGrigorian/autonomous-drone-delivery',
+                },
+                {
+                    img: '/static/images/project_3.png',
+                    color: '#83ff08',
+                    borderColor: '#83ff08',
+                    title: 'Website Portfolio',
+                    desc: 'The terminal-themed portfolio you\'re currently viewing. Built with Flask, JavaScript, and CSS. Taught me web-dev tooling and Python\'s Flask framework.',
+                    stack: `<span class="term-js">JavaScript</span>, <span class="term-flask">Flask</span>, <span class="term-css">CSS</span>, <span class="term-python">Python</span>, <span class="term-docker">Docker</span>`,
+                    url: 'https://github.com/TegranGrigorian/Website-Portfolio',
+                },
+                {
+                    img: '/static/images/project_4.png',
+                    color: '#08ff83',
+                    borderColor: '#08ff83',
+                    title: 'YouTube → MP3/MP4 Converter',
+                    desc: 'A Rust app to download YouTube videos as MP3 or MP4 with safe multithreading and shell install wizards for Linux and Windows.',
+                    stack: `<span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>`,
+                    url: 'https://github.com/TegranGrigorian/yt-to-mp3-4',
+                },
+                {
+                    img: '/static/images/project_5.png',
+                    color: '#ff8308',
+                    borderColor: '#ff8308',
+                    title: 'FRC Swerve Drive Code',
+                    desc: 'Drive and autonomous code for an FRC swerve-drive competition robot. Fast-response code patterns and source control discipline in Java.',
+                    stack: `<span class="term-java">Java</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/216-FRC-',
+                },
+                {
+                    img: '/static/images/project_6.jpg',
+                    color: '#ff0883',
+                    borderColor: '#ff0883',
+                    title: '"Trains++" — Satisfactory Mod',
+                    desc: 'A game mod adding high-speed trains to Satisfactory, built with Unreal Engine and Visual Studio.',
+                    stack: `<span class="term-cpp">C++</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/TrainsPlusPlusMod',
+                },
+                {
+                    img: '/static/images/project_7.png',
+                    color: '#83ff08',
+                    borderColor: '#83ff08',
+                    title: 'Vex-AI Robot Code',
+                    desc: 'Autonomous Vex AI robot using a Jetson Nano + YOLO V5 for target detection across multiple control loops. Won the Vex-AI World Championship.',
+                    stack: `<span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics YOLO (ML/AI)</span>`,
+                    url: 'https://github.com/TegranGrigorian/VexAi-1248X-Slave',
+                },
+                {
+                    img: '/static/images/project_8.png',
+                    color: '#729fcf',
+                    borderColor: '#729fcf',
+                    title: 'TikTok Cleaner',
+                    desc: 'Multithreaded Rust tool that scans and organises TikTok media from Android phones using metadata analysis. Cross-platform (Linux + Windows).',
+                    stack: `<span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>`,
+                    url: 'https://github.com/TegranGrigorian/tiktok-cleaner',
+                },
+            ];
+
+            let html = `<div style="color:#555a7a; font-size:0.82em; margin-bottom:0.5em;">total ${projects.length} &nbsp;— &nbsp;<span style="color:#8aadf4;">ls projects/</span></div>`;
+            projects.forEach(p => {
+                html += `<div class="term-full-card" style="border-left-color:${p.borderColor}">
+  <img src="${p.img}" alt="${p.title}" class="term-card-thumb" onerror="this.style.display='none'">
+  <div class="term-card-body">
+    <div class="term-card-title" style="color:${p.color}">${p.title}</div>
+    <div class="term-card-desc">${p.desc}</div>
+    <div class="term-card-stack"><span style="color:#b39ddb;">stack</span>: ${p.stack}</div>
+    <div class="term-card-link">→ <a href="${p.url}" target="_blank" rel="noopener">${p.url.replace('https://','')}</a></div>
+  </div>
+</div>`;
+            });
+            appendLine(`<div class="term-output-block">${html}</div>`);
+        }
+
+        /* Full experience blocks rendered inside terminal */
+        function cmdLsExperience() {
+            appendLine(`<div class="term-output-block">
+<div style="color:#555a7a; font-size:0.82em; margin-bottom:0.5em;">2 entries &nbsp;— &nbsp;<span style="color:#8aadf4;">ls experience/</span></div>
+
+<div class="term-exp-block">
+  <div style="color:#ff8308; font-weight:700; margin-bottom:0.4em;">2024 – Present &nbsp;·&nbsp; <span style="color:#83ff08;">Westwood AI</span> — Software Engineer</div>
+  <div style="color:#d3d7cf; font-size:0.88em; line-height:1.6; margin-bottom:0.5em;">Automated capture of commercial property to reconstruct 3D models, ran AI anomaly detection, handled data with SQL, and automated report generation for insurance claims. Currently leading a team of 9 interns in Python automation and ML/AI pipelines.</div>
+  <div style="font-size:0.82em;"><span style="color:#b39ddb;">stack</span>:
+    <span class="term-python">Python</span>, <span class="term-flask">Flask</span>,
+    <span class="term-js">JavaScript</span>, <span class="term-docker">Docker</span>,
+    <span class="term-sqlite">SQLite</span>, <span class="term-rich">AWS</span>,
+    <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-git">Git</span>,
+    <span class="term-bash">Shell</span>, <span class="term-cpp">C#</span>,
+    <span class="term-gnu">Label Studio</span>, <span class="term-mavlink">Linux</span>
+  </div>
+</div>
+
+<div class="term-exp-block" style="border-left-color:#83ff08;">
+  <div style="color:#ff8308; font-weight:700; margin-bottom:0.4em;">2020 – 2024 &nbsp;·&nbsp; <span style="color:#83ff08;">High-School Robotics</span></div>
+  <div style="color:#d3d7cf; font-size:0.88em; line-height:1.6; margin-bottom:0.5em;">Led multiple teams to build and program competition robots. <span style="color:#fcaf3e;">Awards:</span> FRC District Championship, Vex-AI World Championship, Michigan Vex State Championship. Open-sourced code and mentored peers in programming.</div>
+  <div style="font-size:0.82em;"><span style="color:#b39ddb;">stack</span>:
+    <span class="term-python">Python</span>, <span class="term-bash">Bash</span>,
+    <span class="term-git">Git</span>, <span class="term-cpp">C/C++</span>,
+    <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-gnu">GNU</span>,
+    <span class="term-websocket">Linux</span>
+  </div>
+</div>
 </div>`);
-            } else if (dir === 'experience') {
-                appendLine(`<div class="term-project-list">
-  <div class="term-project-item"><span style="color:#ff8308;">2024–Present</span> · <span style="color:#83ff08;">Westwood AI</span> — Software Engineer (leading 9 interns)</div>
-  <div class="term-project-item"><span style="color:#ff8308;">2020–2024</span>   · <span style="color:#83ff08;">High-School Robotics</span> — FRC District Champ, Vex-AI World Champ, MI State Champ</div>
-  <br><span style="color:#b39ddb;">Scroll down for full details ↓</span>
-</div>`);
-            }
         }
 
         function cmdCatAbout() {
             appendLine(`<div class="term-output-block" style="border-left:3px solid #83ff08; padding-left:1em;">
-  <span style="color:#fcaf3e;">name</span>: <span style="color:#83ff08;">Tegran Grigorian</span><br>
-  <span style="color:#fcaf3e;">role</span>: <span style="color:#83ff08;">Software Engineer</span><br>
-  <span style="color:#fcaf3e;">edu</span>: <span style="color:#83ff08;">Pursuing CE @ GVSU → transferring to UMich</span><br>
-  <span style="color:#fcaf3e;">bio</span>: <span style="color:#d3d7cf;">Passionate low-level developer who loves building kernels, ML/AI automation pipelines, and anything that runs fast. I open-source my work and love to teach.</span><br>
-  <span style="color:#fcaf3e;">github</span>: <a href="https://github.com/TegranGrigorian" target="_blank" rel="noopener" style="color:#8aadf4;">github.com/TegranGrigorian</a><br>
+  <span style="color:#fcaf3e;">name</span>:     <span style="color:#83ff08;">Tegran Grigorian</span><br>
+  <span style="color:#fcaf3e;">role</span>:     <span style="color:#83ff08;">Software Engineer</span><br>
+  <span style="color:#fcaf3e;">edu</span>:      <span style="color:#83ff08;">Pursuing CE @ GVSU → transferring to UMich</span><br>
+  <span style="color:#fcaf3e;">languages</span>: <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span>, <span class="term-python">Python</span><br>
+  <span style="color:#fcaf3e;">bio</span>:      <span style="color:#d3d7cf;">Passionate low-level developer. Loves building kernels, ML/AI automation pipelines, and anything that runs fast. Open-sources work and loves to teach.</span><br>
+  <span style="color:#fcaf3e;">github</span>:   <a href="https://github.com/TegranGrigorian" target="_blank" rel="noopener" style="color:#8aadf4;">github.com/TegranGrigorian</a><br>
   <span style="color:#fcaf3e;">linkedin</span>: <a href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank" rel="noopener" style="color:#8aadf4;">linkedin.com/in/tegran-grigorian</a>
 </div>`);
         }
 
         function cmdContact() {
-            appendLine(`<div class="term-output-block">
-  <span style="color:#fcaf3e;">Email</span>: <span style="color:#83ff08;">Use the contact form below ↓</span><br>
-  <span style="color:#fcaf3e;">GitHub</span>: <a href="https://github.com/TegranGrigorian" target="_blank" rel="noopener" style="color:#8aadf4;">github.com/TegranGrigorian</a><br>
-  <span style="color:#fcaf3e;">LinkedIn</span>: <a href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank" rel="noopener" style="color:#8aadf4;">linkedin.com/in/tegran-grigorian</a>
+            appendLine(`<div class="term-output-block" style="border-left:3px solid #fcaf3e; padding-left:1em;">
+  <span style="color:#fcaf3e;">GitHub</span>:   <a href="https://github.com/TegranGrigorian" target="_blank" rel="noopener" style="color:#8aadf4;">github.com/TegranGrigorian</a><br>
+  <span style="color:#fcaf3e;">LinkedIn</span>: <a href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank" rel="noopener" style="color:#8aadf4;">linkedin.com/in/tegran-grigorian</a><br>
+  <span style="color:#fcaf3e;">Email</span>:    <span style="color:#83ff08;">Use the contact form ↓</span>
 </div>`);
-            setTimeout(() => {
-                document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
-            }, 400);
+            showContent();
+            setTimeout(() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }), 400);
         }
 
         function cmdClear() {
@@ -704,7 +943,7 @@
             { text: '[  OK  ] Mounting /home/tegran…',       color: '#729fcf',  delay: 780 },
             { text: '[  OK  ] Portfolio ready.',             color: '#83ff08',  delay: 1050},
             { text: '',                                       color: '',         delay: 1200},
-            { text: 'Type  <span style="color:#83ff08;">help</span>  to see all commands,  <span style="color:#83ff08;">neofetch</span>  for my profile,  or use the buttons below.', color: '#b39ddb', delay: 1350 },
+            { text: 'Type  <span style="color:#83ff08;">help</span>  for commands &nbsp;|&nbsp; <span style="color:#83ff08;">neofetch</span>  for profile &nbsp;|&nbsp; ↹ Tab autocompletes &nbsp;|&nbsp; → accepts ghost text', color: '#b39ddb', delay: 1350 },
         ];
 
         let booted = sessionStorage.getItem('booted') === 'true';
@@ -724,7 +963,6 @@
         }
 
         if (booted) {
-            // Skip boot animation on revisit
             BOOT_LINES.forEach(({ text, color }) => {
                 const d = document.createElement('div');
                 d.className = 'term-line';
@@ -743,19 +981,31 @@
         }
 
         /* ── Form submit ── */
+        const cmdHistory = [];
+        let histIdx = -1;
+
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             const raw = input.value;
+            if (!raw.trim()) return;
+            cmdHistory.push(raw.trim());
+            histIdx = -1;
             input.value = '';
+            ghostEl.textContent = '';
+            updateInputWidth();
             runCmd(raw);
         });
 
         /* ── Button strip ── */
         document.querySelectorAll('.cmd-btn[data-cmd]').forEach(btn => {
             btn.addEventListener('click', () => {
-                input.value = btn.dataset.cmd;
-                runCmd(btn.dataset.cmd);
+                const raw = btn.dataset.cmd;
+                cmdHistory.push(raw);
+                histIdx = -1;
                 input.value = '';
+                ghostEl.textContent = '';
+                updateInputWidth();
+                runCmd(raw);
                 input.focus();
             });
         });
@@ -763,36 +1013,16 @@
         /* ── Skip button ── */
         skipBtn.addEventListener('click', () => {
             showContent();
-            setTimeout(() => {
-                document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
-            }, 100);
+            setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 100);
         });
 
-        /* ── Click terminal to refocus input ── */
+        /* ── Click terminal body to refocus input ── */
         document.getElementById('terminal').addEventListener('click', function (e) {
             if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') input.focus();
         });
 
-        /* ── Up-arrow history ── */
-        const cmdHistory = [];
-        let histIdx = -1;
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (histIdx < cmdHistory.length - 1) {
-                    histIdx++;
-                    input.value = cmdHistory[cmdHistory.length - 1 - histIdx];
-                }
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (histIdx > 0) { histIdx--; input.value = cmdHistory[cmdHistory.length - 1 - histIdx]; }
-                else { histIdx = -1; input.value = ''; }
-            }
-        });
-        form.addEventListener('submit', function () {
-            const raw = input.value.trim();
-            if (raw) { cmdHistory.push(raw); histIdx = -1; }
-        });
+        /* initialise width */
+        updateInputWidth();
 
     });
     </script>
