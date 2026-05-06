@@ -326,9 +326,13 @@
             padding: 0.3em 1em;
             color: #888;
             font-size: 0.9em;
-            cursor: default;
+            cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
+            user-select: none;
+        }
+        .grub-entry:hover {
+            color: #d3d7cf;
         }
         .grub-entry.grub-active {
             background: #8aadf4;
@@ -452,6 +456,66 @@
             align-items: flex-start;
         }
 
+        /* ── TUI mail editor ── */
+        #mail-editor {
+            display: none;
+            margin: 0.5em 0 0.3em;
+            border: 1px solid #fcaf3e;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #mail-editor-bar {
+            background: #fcaf3e;
+            color: #0d0f14;
+            font-weight: 700;
+            font-size: 0.8em;
+            padding: 2px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #mail-editor-textarea {
+            display: block;
+            width: 100%;
+            min-height: 130px;
+            max-height: 320px;
+            resize: vertical;
+            background: #0a0c10;
+            color: #d3d7cf;
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88em;
+            padding: 0.6em 0.8em;
+            box-sizing: border-box;
+            line-height: 1.6;
+            caret-color: #83ff08;
+        }
+        #mail-editor-footer {
+            background: #111318;
+            border-top: 1px solid #2a2d3a;
+            color: #b39ddb;
+            font-size: 0.77em;
+            padding: 3px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5em;
+        }
+        #mail-editor-send {
+            background: #83ff08;
+            color: #0d0f14;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        #mail-editor-send:hover { background: #aaff4f; }
+
         /* ── Page layout ── */
         body { margin: 0; padding: 0 0 3em; }
     </style>
@@ -515,6 +579,20 @@
 
             <!-- scrollback history -->
             <div id="term-history"></div>
+
+            <!-- TUI message editor (shown during mail message step) -->
+            <div id="mail-editor" aria-label="Message composer">
+                <div id="mail-editor-bar">
+                    <span>✉ &nbsp;compose message</span>
+                    <span style="font-weight:400; opacity:0.85;">Enter = new line &nbsp;|&nbsp; Ctrl+Enter = send</span>
+                </div>
+                <textarea id="mail-editor-textarea" spellcheck="true"
+                    placeholder="Write your message here…&#10;&#10;Press Enter for a new line.&#10;Ctrl+Enter (or the Send button) to submit."></textarea>
+                <div id="mail-editor-footer">
+                    <span>^C &nbsp;Cancel &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl+Enter: Send</span>
+                    <button id="mail-editor-send" type="button">Send ↵</button>
+                </div>
+            </div>
 
             <!-- prompt row -->
             <form id="terminal-form" autocomplete="off" aria-label="Terminal input">
@@ -675,6 +753,12 @@
         let formActive = false;   // false | true | 'confirm'
         let formStep   = 0;
         let formData   = {};
+        let editorActive = false;
+
+        /* ── TUI editor refs ── */
+        const mailEditorEl  = document.getElementById('mail-editor');
+        const mailEditorTA  = document.getElementById('mail-editor-textarea');
+        const mailEditorBtn = document.getElementById('mail-editor-send');
 
         /* ── Helpers ── */
         function appendLine(html, cls = '') {
