@@ -416,6 +416,7 @@
             justify-content: center;
             padding: 2em 1.5em;
             box-sizing: border-box;
+            transition: min-height 0.5s ease, padding 0.5s ease;
         }
         .terminal-landing {
             width: 100%;
@@ -426,11 +427,12 @@
         /* ── Minimize/maximize ── */
         .term-dot.yellow, .term-dot.green { cursor: pointer; }
         .terminal-content {
-            transition: max-height 0.35s ease, opacity 0.25s ease,
-                        padding-top 0.35s ease, padding-bottom 0.35s ease;
+            max-height: 1200px;
+            transition: max-height 0.5s ease, opacity 0.35s ease,
+                        padding-top 0.5s ease, padding-bottom 0.5s ease;
         }
         #tab-suggestions {
-            transition: max-height 0.35s ease, opacity 0.25s ease;
+            transition: max-height 0.5s ease, opacity 0.35s ease;
         }
         #terminal.minimized .terminal-content {
             max-height: 0 !important;
@@ -446,7 +448,7 @@
         /* collapse stage height when terminal is minimized */
         #term-stage.stage-minimized {
             min-height: 0;
-            padding: 0;
+            padding: 0.5em 1.5em 0;
             align-items: flex-start;
         }
 
@@ -1263,18 +1265,16 @@ ${rows}
         }
 
         /* ── Boot sequence ── */
-        const BOOT_LINES = [
-            { text: 'Woodix OS v1.0  — booting portfolio…', color: '#83ff08',  delay: 0   },
-            { text: '[  OK  ] Loaded kernel modules.',       color: '#729fcf',  delay: 300 },
-            { text: '[  OK  ] Started network services.',    color: '#729fcf',  delay: 550 },
-            { text: '[  OK  ] Mounting /home/tegran…',       color: '#729fcf',  delay: 780 },
-            { text: '[  OK  ] Portfolio ready.',             color: '#83ff08',  delay: 1050},
-            { text: '',                                       color: '',         delay: 1200},
-            { text: 'Type  <span style="color:#83ff08;">help</span>  for commands &nbsp;|&nbsp; <span style="color:#83ff08;">neofetch</span>  for profile &nbsp;|&nbsp; ↹ Tab autocompletes &nbsp;|&nbsp; → accepts ghost text', color: '#b39ddb', delay: 1350 },
+        const TERM_BOOT_LINES = [
+            { text: '[  OK  ] Started bash 5.2.15(1)-release.',          color: '#729fcf',  delay: 0   },
+            { text: '[  OK  ] Sourced /home/tegran/.bashrc.',             color: '#729fcf',  delay: 250 },
+            { text: '[  OK  ] Loaded terminal emulator.',                 color: '#83ff08',  delay: 480 },
+            { text: '',                                                    color: '',         delay: 620 },
+            { text: 'Type  <span style="color:#83ff08;">help</span>  for commands &nbsp;|&nbsp; <span style="color:#83ff08;">neofetch</span>  for profile &nbsp;|&nbsp; ↹ Tab autocompletes &nbsp;|&nbsp; → accepts ghost text', color: '#b39ddb', delay: 720 },
         ];
 
         function runBoot(cb) {
-            BOOT_LINES.forEach(({ text, color, delay }) => {
+            TERM_BOOT_LINES.forEach(({ text, color, delay }) => {
                 setTimeout(() => {
                     const d = document.createElement('div');
                     d.className = 'term-line';
@@ -1284,7 +1284,7 @@ ${rows}
                     termContent.scrollTop = termContent.scrollHeight;
                 }, delay);
             });
-            setTimeout(cb, 1500);
+            setTimeout(cb, 900);
         }
 
         let booted = sessionStorage.getItem('booted') === 'true';
@@ -1307,16 +1307,19 @@ ${rows}
 
         function doActualBoot() {
             const termStageEl = document.getElementById('term-stage');
-            termStageEl.style.visibility = '';
             if (grubIdx === 1) {
-                /* Portfolio mode — no terminal boot, just show content */
+                /* Portfolio mode — pre-apply minimized state silently, then reveal */
+                termEl.classList.add('minimized');
+                termStage.classList.add('stage-minimized');
+                termMinimized = true;
                 showContent();
                 sessionStorage.setItem('booted', 'true');
                 sessionStorage.setItem('portfolioVisible', 'true');
-                minimizeTerminal();
+                termStageEl.style.visibility = '';
                 setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 200);
             } else {
-                /* Terminal mode — show bash startup lines */
+                /* Terminal mode — reveal, then animate bash startup lines */
+                termStageEl.style.visibility = '';
                 content.style.display = 'none';
                 runBoot(() => {
                     input.focus();
@@ -1327,6 +1330,8 @@ ${rows}
 
         function grubBoot() {
             clearInterval(grubInterval);
+            /* 0. Hide terminal immediately so it never flashes through */
+            document.getElementById('term-stage').style.visibility = 'hidden';
             /* 1. Fade out GRUB */
             grubScreen.style.transition = 'opacity 0.28s ease';
             grubScreen.style.opacity = '0';
@@ -1336,8 +1341,6 @@ ${rows}
                 loadingLinesEl.innerHTML = '';
                 loadingScreen.style.display = 'flex';
                 loadingScreen.style.opacity = '1';
-                /* Also hide term-stage so terminal doesn't flash through */
-                document.getElementById('term-stage').style.visibility = 'hidden';
                 const bootAnim = [
                     { text: 'Woodix OS v1.0  \u2014 booting portfolio\u2026', color: '#83ff08',  delay: 0   },
                     { text: '[  OK  ] Loaded kernel modules.',              color: '#729fcf',  delay: 300 },
