@@ -516,6 +516,103 @@
         }
         #mail-editor-send:hover { background: #aaff4f; }
 
+        #mail-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.35em;
+            padding: 4px 8px;
+            background: #0e1016;
+            border-top: 1px solid #1e2030;
+        }
+        #mail-toolbar button {
+            background: none;
+            border: 1px solid #2a2d3a;
+            border-radius: 3px;
+            color: #b39ddb;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78em;
+            padding: 2px 9px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        #mail-toolbar button:hover { border-color: #fcaf3e; color: #fcaf3e; }
+        #mail-attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3em;
+            padding: 0 8px 4px;
+            background: #0e1016;
+        }
+        .mail-attach-chip {
+            background: #1a1d28;
+            border: 1px solid #2a2d3a;
+            border-radius: 3px;
+            color: #d3d7cf;
+            font-size: 0.75em;
+            padding: 2px 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.35em;
+        }
+        .mail-attach-chip button {
+            background: none;
+            border: none;
+            color: #ff5f56;
+            cursor: pointer;
+            font-size: 1em;
+            padding: 0;
+            line-height: 1;
+        }
+        /* Link-insert popover */
+        #mail-link-popover {
+            background: #181a20;
+            border: 1px solid #fcaf3e;
+            border-radius: 4px;
+            padding: 0.5em 0.8em 0.4em;
+            font-size: 0.82em;
+        }
+        .link-pop-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            margin-bottom: 0.3em;
+        }
+        .link-pop-row label {
+            color: #fcaf3e;
+            flex-shrink: 0;
+            width: 3.5em;
+        }
+        .link-pop-row input {
+            flex: 1;
+            background: #0a0c10;
+            border: 1px solid #2a2d3a;
+            border-radius: 3px;
+            color: #d3d7cf;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            padding: 2px 6px;
+            outline: none;
+        }
+        .link-pop-row input:focus { border-color: #fcaf3e; }
+        .link-pop-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.25em;
+        }
+        #link-insert-btn {
+            background: #fcaf3e;
+            border: none;
+            border-radius: 3px;
+            color: #0d0f14;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            font-weight: 700;
+            padding: 2px 10px;
+            cursor: pointer;
+        }
+        #link-insert-btn:hover { background: #ffcc7a; }
+
         /* ── Page layout ── */
         body { margin: 0; padding: 0 0 3em; }
     </style>
@@ -587,7 +684,31 @@
                     <span style="font-weight:400; opacity:0.85;">Enter = new line &nbsp;|&nbsp; Ctrl+Enter = send</span>
                 </div>
                 <textarea id="mail-editor-textarea" spellcheck="true"
-                    placeholder="Write your message here…&#10;&#10;Press Enter for a new line.&#10;Ctrl+Enter (or the Send button) to submit."></textarea>
+                    placeholder="Write your message here…&#10;&#10;Press Enter for a new line.&#10;Ctrl+K to insert a link.&#10;Ctrl+Enter (or the Send button) to submit."></textarea>
+                <!-- toolbar: attach + link -->
+                <div id="mail-toolbar">
+                    <button id="mail-attach-btn" type="button" title="Attach a file">📎 Attach</button>
+                    <button id="mail-link-btn"   type="button" title="Insert hyperlink — Ctrl+K">🔗 Link <span style="opacity:0.55; font-size:0.85em;">Ctrl+K</span></button>
+                    <input  id="mail-file-input" type="file" multiple
+                            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.zip,.csv,.mp4"
+                            style="display:none" aria-label="Attach files">
+                </div>
+                <div id="mail-attachments"></div>
+                <!-- link popover (hidden by default) -->
+                <div id="mail-link-popover" style="display:none;" aria-label="Insert link">
+                    <div class="link-pop-row">
+                        <label for="link-label-input">Label</label>
+                        <input id="link-label-input" type="text" placeholder="link text (optional)">
+                    </div>
+                    <div class="link-pop-row">
+                        <label for="link-url-input">URL</label>
+                        <input id="link-url-input" type="url" placeholder="https://…">
+                    </div>
+                    <div class="link-pop-actions">
+                        <span style="color:#555a7a;">Enter: insert &nbsp;|&nbsp; Esc: cancel</span>
+                        <button id="link-insert-btn" type="button">Insert ↵</button>
+                    </div>
+                </div>
                 <div id="mail-editor-footer">
                     <span>^C &nbsp;Cancel &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl+Enter: Send</span>
                     <button id="mail-editor-send" type="button">Send ↵</button>
@@ -759,6 +880,15 @@
         const mailEditorEl  = document.getElementById('mail-editor');
         const mailEditorTA  = document.getElementById('mail-editor-textarea');
         const mailEditorBtn = document.getElementById('mail-editor-send');
+        const mailFileInput = document.getElementById('mail-file-input');
+        const mailAttachBtn = document.getElementById('mail-attach-btn');
+        const mailLinkBtn   = document.getElementById('mail-link-btn');
+        const mailAttachEl  = document.getElementById('mail-attachments');
+        const mailLinkPop   = document.getElementById('mail-link-popover');
+        const linkLabelInp  = document.getElementById('link-label-input');
+        const linkUrlInp    = document.getElementById('link-url-input');
+        const linkInsertBtn = document.getElementById('link-insert-btn');
+        let attachedFiles   = [];   // File[] selected by user
 
         /* ── Helpers ── */
         function appendLine(html, cls = '') {
@@ -1594,9 +1724,12 @@ ${rows}
             if (step.key === 'message') {
                 /* Show TUI editor instead of single-line input */
                 editorActive = true;
+                attachedFiles = [];
+                mailAttachEl.innerHTML = '';
+                mailLinkPop.style.display = 'none';
                 mailEditorEl.style.display = 'block';
                 mailEditorTA.value = '';
-                mailEditorTA.placeholder = 'Write your message here…\n\nPress Enter for a new line.\nCtrl+Enter (or the Send button) to submit.';
+                mailEditorTA.placeholder = 'Write your message here…\n\nPress Enter for a new line.\nCtrl+K to insert a link.\nCtrl+Enter (or the Send button) to submit.';
                 termContent.scrollTop = termContent.scrollHeight;
                 setTimeout(() => mailEditorTA.focus(), 30);
             } else {
@@ -1612,6 +1745,8 @@ ${rows}
             const val = mailEditorTA.value;
             editorActive = false;
             mailEditorEl.style.display = 'none';
+            /* Stash files snapshot before chips get cleared */
+            formData.attachments = attachedFiles.slice();
             /* Echo truncated preview of message */
             const preview = val.trim().replace(/\n/g, ' ').slice(0, 60) + (val.trim().length > 60 ? '…' : '');
             appendLine(
@@ -1619,6 +1754,10 @@ ${rows}
                 `<span style="color:#555a7a;"> › </span>` +
                 `<span style="color:#83ff08;">${escHtml(preview)}</span>`
             );
+            if (formData.attachments.length) {
+                const names = formData.attachments.map(f => escHtml(f.name)).join(', ');
+                appendLine(`<span style="color:#555a7a;">📎 ${formData.attachments.length} attachment(s): ${names}</span>`);
+            }
             advanceForm(val);
             input.focus();
         }
@@ -1628,7 +1767,14 @@ ${rows}
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
                 submitEditor();
+            } else if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                openLinkPopover();
             } else if ((e.ctrlKey && e.key === 'c') || e.key === 'Escape') {
+                if (mailLinkPop.style.display !== 'none') {
+                    closeLinkPopover();
+                    return;
+                }
                 e.preventDefault();
                 editorActive = false;
                 mailEditorEl.style.display = 'none';
@@ -1636,6 +1782,74 @@ ${rows}
             }
         });
         mailEditorBtn.addEventListener('click', submitEditor);
+
+        /* ── Attach files ── */
+        mailAttachBtn.addEventListener('click', () => mailFileInput.click());
+        mailLinkBtn.addEventListener('click', openLinkPopover);
+        mailFileInput.addEventListener('change', function () {
+            Array.from(this.files).forEach(f => {
+                if (!attachedFiles.find(x => x.name === f.name && x.size === f.size)) {
+                    attachedFiles.push(f);
+                }
+            });
+            this.value = '';
+            renderAttachChips();
+        });
+
+        function renderAttachChips() {
+            mailAttachEl.innerHTML = '';
+            attachedFiles.forEach((f, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'mail-attach-chip';
+                chip.innerHTML =
+                    `<span title="${escHtml(f.name)}">${escHtml(f.name.length > 28 ? f.name.slice(0,25)+'…' : f.name)}</span>` +
+                    `<button type="button" aria-label="Remove ${escHtml(f.name)}">×</button>`;
+                chip.querySelector('button').addEventListener('click', () => {
+                    attachedFiles.splice(i, 1);
+                    renderAttachChips();
+                });
+                mailAttachEl.appendChild(chip);
+            });
+        }
+
+        /* ── Link popover ── */
+        function openLinkPopover() {
+            const sel = mailEditorTA.value.substring(
+                mailEditorTA.selectionStart, mailEditorTA.selectionEnd
+            );
+            linkLabelInp.value = sel;
+            linkUrlInp.value = '';
+            mailLinkPop.style.display = 'block';
+            setTimeout(() => (sel ? linkUrlInp : linkLabelInp).focus(), 20);
+        }
+
+        function closeLinkPopover() {
+            mailLinkPop.style.display = 'none';
+            mailEditorTA.focus();
+        }
+
+        function doInsertLink() {
+            const url   = linkUrlInp.value.trim();
+            const label = linkLabelInp.value.trim() || url;
+            if (!url) { closeLinkPopover(); return; }
+            const text   = `[${label}](${url})`;
+            const start  = mailEditorTA.selectionStart;
+            const before = mailEditorTA.value.slice(0, start);
+            const after  = mailEditorTA.value.slice(mailEditorTA.selectionEnd);
+            mailEditorTA.value = before + text + after;
+            mailEditorTA.selectionStart = mailEditorTA.selectionEnd = start + text.length;
+            closeLinkPopover();
+        }
+
+        linkInsertBtn.addEventListener('click', doInsertLink);
+        linkUrlInp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); doInsertLink(); }
+            else if (e.key === 'Escape') { e.preventDefault(); closeLinkPopover(); }
+        });
+        linkLabelInp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); linkUrlInp.focus(); }
+            else if (e.key === 'Escape') { e.preventDefault(); closeLinkPopover(); }
+        });
 
         function advanceForm(val) {
             const step = FORM_STEPS[formStep];
