@@ -2,370 +2,1981 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Portfolio Home</title>
+    <title>tegran@portfolio:~</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        /* ── Terminal Window ── */
         .terminal-landing {
-            background: #181821;
+            background: #0d0f14;
             color: #d3d7cf;
             font-family: 'JetBrains Mono', monospace;
-            max-width: 900px;
-            margin: 2em auto;
-            border-radius: 1em;
-            box-shadow: 0 2px 16px #000a;
+            max-width: 960px;
+            margin: 1.5em auto;
+            border-radius: 0.8em;
+            box-shadow: 0 0 40px #83ff0822, 0 4px 32px #000c;
             padding: 0;
             position: relative;
             overflow: hidden;
+            border: 1px solid #2a2d3a;
         }
+
+        /* scanline overlay */
+        .terminal-landing::before {
+            content: '';
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 3px,
+                rgba(0,0,0,0.08) 3px,
+                rgba(0,0,0,0.08) 4px
+            );
+            border-radius: inherit;
+        }
+
+        /* subtle screen flicker */
+        @keyframes flicker {
+            0%,100% { opacity: 1; }
+            92% { opacity: 1; }
+            93% { opacity: 0.96; }
+            94% { opacity: 1; }
+            96% { opacity: 0.98; }
+        }
+        .terminal-landing { animation: flicker 8s infinite; }
+
+        /* ── Title bar ── */
         .terminal-bar {
-            background: #23203a;
-            height: 2em;
-            border-radius: 1em 1em 0 0;
+            background: #1a1c26;
+            height: 2.2em;
+            border-radius: 0.8em 0.8em 0 0;
             display: flex;
             align-items: center;
-            padding-left: 1em;
+            padding: 0 1em;
+            gap: 0.5em;
+            border-bottom: 1px solid #2a2d3a;
+            user-select: none;
         }
         .term-dot {
-            width: 0.8em;
-            height: 0.8em;
+            width: 0.75em; height: 0.75em;
             border-radius: 50%;
-            margin-right: 0.5em;
             display: inline-block;
+            cursor: default;
         }
-        .term-dot.red { background: #ff5f56; }
+        .term-dot.red    { background: #ff5f56; }
         .term-dot.yellow { background: #ffbd2e; }
-        .term-dot.green { background: #27c93f; }
-        .terminal-content {
-            padding: 2em;
+        .term-dot.green  { background: #27c93f; }
+        .terminal-bar-title {
+            flex: 1;
+            text-align: center;
+            font-size: 0.8em;
+            color: #555a7a;
+            letter-spacing: 0.05em;
         }
+
+        /* ── Terminal output area ── */
+        .terminal-content {
+            padding: 1.6em 2em 0.5em;
+            min-height: 320px;
+            max-height: 70vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* ── ASCII art header ── */
+        .ascii-art {
+            color: #83ff08;
+            font-size: 0.62em;
+            line-height: 1.15;
+            white-space: pre;
+            margin-bottom: 0.8em;
+            text-shadow: 0 0 8px #83ff0866;
+        }
+
+        /* ── Boot line typewriter ── */
+        @keyframes blink-cursor {
+            0%,100% { border-right-color: #8aadf4; }
+            50%      { border-right-color: transparent; }
+        }
+        .typewriter-line {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid #8aadf4;
+            animation: blink-cursor 0.9s step-end infinite;
+        }
+
+        /* ── Output lines in scroll-back ── */
+        .term-line { margin: 0.15em 0; line-height: 1.6; }
+        .term-cmd-echo { color: #8aadf4; }
+        .term-output-block { margin: 0.3em 0 0.8em 0; }
+
+        /* ── Prompt row ── */
         .terminal-prompt {
             display: flex;
             align-items: center;
-            gap: 0.5em;
-            margin-top: 1.5em;
-            font-size: 1.1em;
+            gap: 0.4em;
+            margin-top: 0.8em;
+            font-size: 1.05em;
+            flex-wrap: wrap;
+        }
+        /* input-area-wrapper makes ghost text flow right after typed text */
+        .input-area-wrapper {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            min-width: 0;
+        }
+        .input-mirror {
+            position: absolute;
+            visibility: hidden;
+            white-space: pre;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1em;
+            pointer-events: none;
+            top: 0; left: 0;
+        }
+        .ghost-text {
+            color: #3a3f5c;
+            pointer-events: none;
+            white-space: pre;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1em;
+            flex-shrink: 0;
+            user-select: none;
         }
         .terminal-input {
             background: none;
             border: none;
             color: #8aadf4;
             font-family: inherit;
-            font-size: 1.1em;
+            font-size: 1em;
             outline: none;
-            width: 10em;
+            min-width: 2px;
+            width: 100%; /* JS overrides to content width when typing */
             padding: 0;
-            margin: 0;
-            caret-color: #8aadf4;
+            caret-color: #83ff08;
+            flex: 1;     /* fills wrapper when empty so placeholder shows */
         }
-        .neofetch-output {
+
+        /* ── neofetch layout ── */
+        .neofetch-layout {
             display: flex;
             align-items: flex-start;
             gap: 2em;
-            margin-top: 1.5em;
             flex-wrap: wrap;
+            margin: 0.5em 0;
         }
         .neofetch-image {
-            width: 120px;
-            height: 120px;
+            width: 110px; height: 110px;
             border-radius: 0.5em;
             object-fit: cover;
+            border: 1px solid #2a2d3a;
         }
         .neofetch-info {
             font-family: 'JetBrains Mono', monospace;
             color: #d3d7cf;
-            font-size: 1em;
+            font-size: 0.95em;
             flex: 1;
+            line-height: 1.7;
         }
-        .neofetch-links {
-            margin-top: 1em;
-            color: #fcaf3e;
-        }
-        .neofetch-links span {
-            color: #fcaf3e;
-            font-weight: bold;
-        }
-        .color-table {
-            display: flex;
-            gap: 0.5em;
-            margin-top: 1em;
-        }
-        .color-box {
-            width: 20px;
-            height: 20px;
-            border-radius: 3px;
-        }
-        .color-box.black { background: #363636; }
-        .color-box.red { background: #ff0883; }
-        .color-box.green { background: #83ff08; }
-        .color-box.yellow { background: #ff8308; }
-        .color-box.blue { background: #0883ff; }
+        .color-table { display: flex; gap: 0.4em; margin-top: 0.6em; }
+        .color-box { width: 18px; height: 18px; border-radius: 3px; }
+        .color-box.black   { background: #363636; }
+        .color-box.red     { background: #ff0883; }
+        .color-box.green   { background: #83ff08; }
+        .color-box.yellow  { background: #ff8308; }
+        .color-box.blue    { background: #0883ff; }
         .color-box.magenta { background: #8308ff; }
-        .color-box.cyan { background: #08ff83; }
-        .color-box.white { background: #b6b6b6; }
-        @media (max-width: 600px) {
-            .neofetch-output {
-                flex-direction: column;
-                align-items: center;
-            }
-            .neofetch-image {
-                width: 100px;
-                height: 100px;
-            }
-            .neofetch-info {
-                font-size: 0.9em;
-                text-align: center;
-            }
-            .terminal-prompt {
-                font-size: 1em;
-            }
-            .terminal-input {
-                width: 8em;
-            }
-            .project-card {
-                font-size: 0.9em;
-            }
-        }
+        .color-box.cyan    { background: #08ff83; }
+        .color-box.white   { background: #b6b6b6; }
 
+        /* ── ls grid ── */
+        .ls-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3em 1.5em;
+            margin: 0.3em 0;
+        }
+        .ls-dir  { color: #8aadf4; font-weight: 700; }
+        .ls-file { color: #d3d7cf; }
+
+        /* ── Project mini-cards in terminal ── */
+        .term-project-list { margin: 0.3em 0; }
+        .term-project-item {
+            border-left: 3px solid #23203a;
+            padding: 0.4em 0.8em;
+            margin-bottom: 0.5em;
+        }
+        .term-project-item:hover { border-left-color: #83ff08; }
+
+        /* ── help table ── */
+        .help-table { border-collapse: collapse; margin: 0.3em 0; font-size: 0.92em; }
+        .help-table td { padding: 0.15em 1.2em 0.15em 0; vertical-align: top; }
+        .help-table td:first-child { color: #83ff08; white-space: nowrap; }
+        .help-table td:last-child  { color: #b39ddb; }
+
+        /* ── Fade-in ── */
         .fade-in {
             opacity: 0;
             animation: fadeIn 0.5s ease-in forwards;
         }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* ── Section headings with ASCII prefix ── */
+        .section-heading-ascii {
+            font-family: 'JetBrains Mono', monospace;
+            color: #83ff08;
+            font-size: 1em;
+            letter-spacing: 0.05em;
         }
+
+        /* ── Full project card inside terminal ── */
+        .term-full-card {
+            background: #0d0f14;
+            border: 1px solid #2a2d3a;
+            border-left: 3px solid #83ff08;
+            border-radius: 0 0.4em 0.4em 0;
+            padding: 0.7em 1em;
+            margin-bottom: 0.7em;
+            display: flex;
+            gap: 1em;
+            align-items: flex-start;
+        }
+        .term-card-thumb {
+            width: 80px; height: 60px;
+            object-fit: cover;
+            border-radius: 0.3em;
+            flex-shrink: 0;
+            border: 1px solid #2a2d3a;
+        }
+        .term-card-body { flex: 1; min-width: 0; }
+        .term-card-title { font-weight: 700; margin-bottom: 0.25em; font-size: 0.95em; }
+        .term-card-desc  { color: #7a7f99; font-size: 0.84em; margin-bottom: 0.3em; line-height: 1.5; }
+        .term-card-stack { font-size: 0.8em; margin-bottom: 0.3em; }
+        .term-card-link  { font-size: 0.83em; }
+        .term-card-link a { color: #8aadf4; text-decoration: none; }
+        .term-card-link a:hover { text-decoration: underline; }
+        /* ── Full experience block inside terminal ── */
+        .term-exp-block {
+            border-left: 3px solid #fcaf3e;
+            padding: 0.6em 0.9em;
+            margin-bottom: 0.8em;
+            background: #0d0f14;
+            border-radius: 0 0.4em 0.4em 0;
+        }
+        /* ── Tab suggestion menu below prompt ── */
+        #tab-suggestions {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.3em 0.8em;
+            padding: 0.4em 0.8em;
+            background: #0a0c11;
+            border-top: 1px dashed #2a2d3a;
+            font-size: 0.83em;
+        }
+        .tab-sug-item {
+            color: #555a7a;
+            cursor: pointer;
+            padding: 0.1em 0.3em;
+            border-radius: 0.2em;
+        }
+        .tab-sug-item.active { color: #83ff08; background: #1a1c26; }
+
+        /* ── GRUB Bootloader overlay ── */
+        #grub-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #05070d;
+            color: #d3d7cf;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1em;
+        }
+        #grub-inner {
+            width: min(680px, 95vw);
+            border: 1px solid #3a3f5c;
+            padding: 1.5em 2em 1.8em;
+            background: #0d0f14;
+            box-shadow: 0 0 60px #83ff0810, 0 4px 40px #000d;
+        }
+        .grub-header-line {
+            color: #555a7a;
+            font-size: 0.82em;
+            padding-bottom: 0.7em;
+            border-bottom: 1px solid #1e2030;
+            margin-bottom: 1.1em;
+        }
+        .grub-header-line .grub-hl { color: #83ff08; }
+        #grub-menu-box {
+            border: 1px solid #1e2030;
+            padding: 0.3em 0;
+            background: #070911;
+            min-height: 4em;
+        }
+        .grub-entry {
+            padding: 0.3em 1em;
+            color: #888;
+            font-size: 0.9em;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            user-select: none;
+        }
+        .grub-entry:hover {
+            color: #d3d7cf;
+        }
+        .grub-entry.grub-active {
+            background: #8aadf4;
+            color: #0d0f14;
+            font-weight: 700;
+        }
+        #grub-hint {
+            color: #3a3f5c;
+            font-size: 0.76em;
+            margin-top: 1.2em;
+            line-height: 1.75;
+            border-top: 1px solid #1e2030;
+            padding-top: 0.8em;
+        }
+        #grub-timer-line {
+            color: #fcaf3e;
+            font-size: 0.8em;
+            margin-top: 0.5em;
+            min-height: 1.2em;
+        }
+
+        /* ── htop process table ── */
+        .htop-wrap {
+            font-size: 0.82em;
+            line-height: 1.5;
+        }
+        .htop-header {
+            background: #1a1c26;
+            color: #8aadf4;
+            padding: 0.1em 0.5em;
+            margin-bottom: 0.1em;
+            letter-spacing: 0.04em;
+        }
+        .htop-row {
+            display: flex;
+            gap: 0;
+            padding: 0.05em 0;
+        }
+        .htop-pid  { width: 4em;  color: #555a7a; text-align: right; padding-right: 1em; }
+        .htop-user { width: 7em;  color: #fcaf3e; }
+        .htop-cpu  { width: 5em;  color: #83ff08; text-align: right; padding-right: 0.5em; }
+        .htop-bar  { width: 15em; }
+        .htop-bar-fill  { color: #83ff08; }
+        .htop-bar-empty { color: #1e2030; }
+        .htop-cmd  { color: #d3d7cf; padding-left: 0.8em; }
+        .htop-sep  { color: #2a2d3a; padding: 0.2em 0; }
+        .htop-footer { color: #555a7a; margin-top: 0.4em; font-size: 0.9em; }
+
+        /* ── git log ── */
+        .git-commit { margin-bottom: 0.9em; }
+        .git-hash   { color: #fcaf3e; }
+        .git-ref    { color: #8aadf4; }
+        .git-author { color: #555a7a; }
+        .git-date   { color: #555a7a; }
+        .git-msg    { color: #d3d7cf; padding-left: 1.2em; margin-top: 0.1em; }
+        .git-msg-body { color: #888; padding-left: 1.2em; font-size: 0.9em; }
+
+        /* ── Loading screen (between GRUB and terminal) ── */
+        /* ── Loading screen (animated boot lines) ── */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 9000;
+            background: #05070d;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            transition: opacity 0.3s ease;
+        }
+        #loading-lines {
+            width: min(600px, 90vw);
+            font-size: 0.92em;
+            line-height: 1.9;
+        }
+        @keyframes loadLineFade {
+            from { opacity: 0; transform: translateY(5px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .loading-line { opacity: 0; animation: loadLineFade 0.22s ease forwards; }
+
+        /* ── Terminal stage: full-viewport flex centering ── */
+        #term-stage {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2em 1.5em;
+            box-sizing: border-box;
+            transition: min-height 0.5s ease, padding 0.5s ease;
+        }
+        .terminal-landing {
+            width: 100%;
+            max-width: 820px;
+        }
+        nav { max-width: 820px; margin-left: auto; margin-right: auto; }
+
+        /* ── Minimize/maximize ── */
+        .term-dot.yellow, .term-dot.green { cursor: pointer; }
+        .terminal-content {
+            max-height: 1200px;
+            transition: max-height 0.5s ease, opacity 0.35s ease,
+                        padding-top 0.5s ease, padding-bottom 0.5s ease;
+        }
+        #tab-suggestions {
+            transition: max-height 0.5s ease, opacity 0.35s ease;
+        }
+        #terminal.minimized .terminal-content {
+            max-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            min-height: 0 !important;
+            opacity: 0;
+        }
+        #terminal.minimized #tab-suggestions {
+            max-height: 0 !important;
+            opacity: 0;
+        }
+        /* collapse stage height when terminal is minimized */
+        #term-stage.stage-minimized {
+            min-height: 0;
+            padding: 0.5em 1.5em 0;
+            align-items: flex-start;
+        }
+
+        /* ── TUI mail editor ── */
+        #mail-editor {
+            display: none;
+            margin: 0.5em 0 0.3em;
+            border: 1px solid #fcaf3e;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #mail-editor-bar {
+            background: #fcaf3e;
+            color: #0d0f14;
+            font-weight: 700;
+            font-size: 0.8em;
+            padding: 2px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #mail-editor-textarea {
+            display: block;
+            width: 100%;
+            min-height: 130px;
+            max-height: 320px;
+            resize: vertical;
+            background: #0a0c10;
+            color: #d3d7cf;
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88em;
+            padding: 0.6em 0.8em;
+            box-sizing: border-box;
+            line-height: 1.6;
+            caret-color: #83ff08;
+        }
+        #mail-editor-footer {
+            background: #111318;
+            border-top: 1px solid #2a2d3a;
+            color: #b39ddb;
+            font-size: 0.77em;
+            padding: 3px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5em;
+        }
+        #mail-editor-send {
+            background: #83ff08;
+            color: #0d0f14;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        #mail-editor-send:hover { background: #aaff4f; }
+
+        #mail-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.35em;
+            padding: 4px 8px;
+            background: #0e1016;
+            border-top: 1px solid #1e2030;
+        }
+        #mail-toolbar button {
+            background: none;
+            border: 1px solid #2a2d3a;
+            border-radius: 3px;
+            color: #b39ddb;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78em;
+            padding: 2px 9px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        #mail-toolbar button:hover { border-color: #fcaf3e; color: #fcaf3e; }
+        #mail-attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3em;
+            padding: 0 8px 4px;
+            background: #0e1016;
+        }
+        .mail-attach-chip {
+            background: #1a1d28;
+            border: 1px solid #2a2d3a;
+            border-radius: 3px;
+            color: #d3d7cf;
+            font-size: 0.75em;
+            padding: 2px 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.35em;
+        }
+        .mail-attach-chip button {
+            background: none;
+            border: none;
+            color: #ff5f56;
+            cursor: pointer;
+            font-size: 1em;
+            padding: 0;
+            line-height: 1;
+        }
+        /* Link-insert popover */
+        #mail-link-popover {
+            background: #181a20;
+            border: 1px solid #fcaf3e;
+            border-radius: 4px;
+            padding: 0.5em 0.8em 0.4em;
+            font-size: 0.82em;
+        }
+        .link-pop-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            margin-bottom: 0.3em;
+        }
+        .link-pop-row label {
+            color: #fcaf3e;
+            flex-shrink: 0;
+            width: 3.5em;
+        }
+        .link-pop-row input {
+            flex: 1;
+            background: #0a0c10;
+            border: 1px solid #2a2d3a;
+            border-radius: 3px;
+            color: #d3d7cf;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            padding: 2px 6px;
+            outline: none;
+        }
+        .link-pop-row input:focus { border-color: #fcaf3e; }
+        .link-pop-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.25em;
+        }
+        #link-insert-btn {
+            background: #fcaf3e;
+            border: none;
+            border-radius: 3px;
+            color: #0d0f14;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            font-weight: 700;
+            padding: 2px 10px;
+            cursor: pointer;
+        }
+        #link-insert-btn:hover { background: #ffcc7a; }
+
+        /* ── Page layout ── */
+        body { margin: 0; padding: 0 0 3em; }
     </style>
 </head>
 <body>
-    <nav>
-        <a class="term-blue" href="/">Home</a> | 
-        <!-- <a class="term-green" href="/resume/">Resume</a> |  -->
-        <a class="term-magenta" href="#contact">Contact</a>
-    </nav>
 
-    <div id="terminal" class="terminal-landing">
-        <div class="terminal-bar">
-            <span class="term-dot red"></span>
-            <span class="term-dot yellow"></span>
-            <span class="term-dot green"></span>
-        </div>
-        <div class="terminal-content" id="terminal-content">
-            <div id="terminal-greeting">
-                <span style="color:#83ff08;">tegran@portfolio</span>:<span style="color:#8aadf4;">~</span>$ <span style="color:#d3d7cf;">Welcome to my portfolio!</span>
-                <div style="margin-top:1em; color:#b39ddb;">
-                    Type <span style="color:#8aadf4;">neofetch</span> to begin!
-                </div>
+    <!-- ══════════════════════════════════════════
+         GRUB-STYLE BOOT MENU
+    ══════════════════════════════════════════ -->
+    <!-- Loading screen -->
+    <div id="loading-screen" role="status" aria-label="Loading" aria-live="polite">
+        <div id="loading-lines"></div>
+    </div>
+
+    <div id="grub-screen" role="dialog" aria-label="Boot menu" aria-modal="true">
+        <div id="grub-inner">
+            <div class="grub-header-line">
+                <span class="grub-hl">WoodixBOOT</span> &nbsp;v2.06 &nbsp;|&nbsp; UEFI &nbsp;|&nbsp; x86_64
+                <span style="float:right; color:#2a2d3a;">ESC to skip</span>
             </div>
-            <div id="neofetch-output" style="display:none;">
-                <div class="neofetch-output">
-                    <img src="{{ url_for('static', filename='images/neo_fetch.jpg') }}" alt="Profile Image" class="neofetch-image">
-                    <div class="neofetch-info">
-                        <span style="color:#8aadf4;">tegran@portfolio</span><br>
-                        <span style="color:#b39ddb;">--------------------</span><br>
-                        <span style="color:#fcaf3e;">OS</span>: <span style="color:#83ff08;">Woodix/GNU</span><br>
-                        <span style="color:#fcaf3e;">Kernel</span>: <span style="color:#83ff08;">Woodix</span><br>
-                        <span style="color:#fcaf3e;">Age</span>: <span style="color:#83ff08;">19</span><br>
-                        <span style="color:#fcaf3e;">Education</span>: <span style="color:#83ff08;">Pursuing CE Degree at Grand Valley State University</span><br>
-                        <span style="color:#fcaf3e;">Nationality</span>: <span style="color:#83ff08;">Armenian <img src="https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/svg/1f1e6-1f1f2.svg" alt="Armenian flag" width="20" height="15"></span><br>
-                        <span style="color:#fcaf3e;">Hobbies</span>: <span style="color:#83ff08;">Gaming, Snowboarding, Coding</span><br>
-                        <span style="color:#fcaf3e;">Languages</span>: <span style="color:#83ff08;">Rust, C/C++, Python</span><br>
-                        <span style="color:#fcaf3e;">Pet</span>: <span style="color:#83ff08;">Woody</span><br>
-                        <span style="color:#fcaf3e;">Favorite Shows</span>: <span style="color:#83ff08;">Breaking Bad, Neon Genesis Evangelion, 86</span><br>
-                        <span style="color:#fcaf3e;">Favorite Movies</span>: <span style="color:#83ff08;">Batman: Dark Knight, Dune Part 2</span><br>
-                        <div class="neofetch-links">
-                            <span>Quick Links:</span> <a href="https://github.com/TegranGrigorian" target="_blank">GitHub</a>, <a href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank">LinkedIn</a>
-                        </div>
-                        <div class="color-table">
-                            <div class="color-box black"></div>
-                            <div class="color-box red"></div>
-                            <div class="color-box green"></div>
-                            <div class="color-box yellow"></div>
-                            <div class="color-box blue"></div>
-                            <div class="color-box magenta"></div>
-                            <div class="color-box cyan"></div>
-                            <div class="color-box white"></div>
-                        </div>
-                        <span style="color:#b39ddb;">--------------------</span><br>
-                        <span style="color:#fcaf3e;">Bio</span>: <span style="color:#83ff08;">Passionate developer, I love building low-level programs and using ML/AI and code to automate tasks. I plan on transfering to the University of Michigan for Computer Engineering.</span>
-                    </div>
-                </div>
+
+            <div id="grub-menu-box" role="listbox" aria-label="Boot options">
+                <div class="grub-entry grub-active" role="option" aria-selected="true"  data-grub-idx="0"> * &nbsp; Tegran Grigorian &nbsp;—&nbsp; Terminal Environment</div>
+                <div class="grub-entry"             role="option" aria-selected="false" data-grub-idx="1"> &nbsp; &nbsp; Tegran Grigorian &nbsp;—&nbsp; Skip to Portfolio</div>
             </div>
-            <form id="terminal-form" autocomplete="off" style="margin-top:2em;">
-                <div class="terminal-prompt">
-                    <span style="color:#83ff08;">tegran@portfolio</span>:<span style="color:#8aadf4;">~</span>$ 
-                    <input id="terminal-input" class="terminal-input" type="text" autocomplete="off" spellcheck="false" />
-                </div>
-            </form>
-            <div id="terminal-error" class="terminal-error" style="display:none;">Unknown command. Try <b>neofetch</b>.</div>
+
+            <div id="grub-hint">
+                Use the ↑ and ↓ keys to select which entry is highlighted.<br>
+                Press Enter to boot, or click an entry (double-click to boot immediately).
+            </div>
+            <div id="grub-timer-line">
+                The highlighted entry will be executed automatically in <span id="grub-timer">5</span>s.
+            </div>
         </div>
     </div>
 
-    <div id="portfolio-content" class="fade-in" style="display:none;">
-        <section style="max-width: 900px; margin: 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
-            <h2 class="term-green" style="margin-top:0;">Projects</h2>
-            <div style="display: flex; flex-wrap: wrap; gap: 2em;">
-                <!-- First Large Project -->
-                <div style="flex: 1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_1.png') }}" alt="Project 1" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
-                    <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">"Woodix" - Kernel from Scratch</h3>
-                    <p>A custom kernel I am working on written in C, Rust, and Assembly; this kernel is a "copy" of the first verison of Linux. From this project I learned how to create a bootloader, kernel, filesystem, scheduler, linkers, loaders and system calls. I love developing low level software and hope to expand on the lessons learned from this project to create CUDA drivers, low level frameworks, compilers and more advance kernels</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-rust">Rust</span>, <span class="term-cpp">C</span>, <span class="term-assem">Assembly</span>, <span class="term-gnu">GNU</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/Woodix" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+    <!-- ══════════════════════════════════════════
+         TERMINAL EMULATOR
+    ══════════════════════════════════════════ -->
+    <div id="term-stage">
+    <div id="terminal" class="terminal-landing" role="region" aria-label="Interactive terminal">
+        <div class="terminal-bar">
+            <span class="term-dot red"    id="dot-red"    title="Close"></span>
+            <span class="term-dot yellow" id="dot-yellow" title="Minimize"></span>
+            <span class="term-dot green"  id="dot-green"  title="Maximize"></span>
+            <span class="terminal-bar-title">tegran@portfolio — bash</span>
+        </div>
+
+        <!-- scrollback output -->
+        <div class="terminal-content" id="terminal-content" aria-live="polite" aria-atomic="false">
+            <pre class="ascii-art" aria-hidden="true">
+  ████████╗███████╗ ██████╗ ██████╗  █████╗ ███╗   ██╗
+  ╚══██╔══╝██╔════╝██╔════╝ ██╔══██╗██╔══██╗████╗  ██║
+     ██║   █████╗  ██║  ███╗██████╔╝███████║██╔██╗ ██║
+     ██║   ██╔══╝  ██║   ██║██╔══██╗██╔══██║██║╚██╗██║
+     ██║   ███████╗╚██████╔╝██║  ██║██║  ██║██║ ╚████║
+     ╚═╝   ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝</pre>
+
+            <!-- boot lines injected by JS -->
+            <div id="boot-lines"></div>
+
+            <!-- scrollback history -->
+            <div id="term-history"></div>
+
+            <!-- TUI message editor (shown during mail message step) -->
+            <div id="mail-editor" aria-label="Message composer">
+                <div id="mail-editor-bar">
+                    <span>✉ &nbsp;compose message</span>
+                    <span style="font-weight:400; opacity:0.85;">Enter = new line &nbsp;|&nbsp; Ctrl+Enter = send</span>
                 </div>
-                <!-- Second Large Project -->
-                <div style="flex: 1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_2.jpg') }}" alt="Project 2" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
+                <textarea id="mail-editor-textarea" spellcheck="true"
+                    placeholder="Write your message here…&#10;&#10;Press Enter for a new line.&#10;Ctrl+K to insert a link.&#10;Ctrl+Enter (or the Send button) to submit."></textarea>
+                <!-- toolbar: attach + link -->
+                <div id="mail-toolbar">
+                    <button id="mail-attach-btn" type="button" title="Attach a file">📎 Attach</button>
+                    <button id="mail-link-btn"   type="button" title="Insert hyperlink — Ctrl+K">🔗 Link <span style="opacity:0.55; font-size:0.85em;">Ctrl+K</span></button>
+                    <input  id="mail-file-input" type="file" multiple
+                            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.zip,.csv,.mp4"
+                            style="display:none" aria-label="Attach files">
+                </div>
+                <div id="mail-attachments"></div>
+                <!-- link popover (hidden by default) -->
+                <div id="mail-link-popover" style="display:none;" aria-label="Insert link">
+                    <div class="link-pop-row">
+                        <label for="link-label-input">Label</label>
+                        <input id="link-label-input" type="text" placeholder="link text (optional)">
+                    </div>
+                    <div class="link-pop-row">
+                        <label for="link-url-input">URL</label>
+                        <input id="link-url-input" type="url" placeholder="https://…">
+                    </div>
+                    <div class="link-pop-actions">
+                        <span style="color:#555a7a;">Enter: insert &nbsp;|&nbsp; Esc: cancel</span>
+                        <button id="link-insert-btn" type="button">Insert ↵</button>
+                    </div>
+                </div>
+                <div id="mail-editor-footer">
+                    <span>^C &nbsp;Cancel &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl+Enter: Send</span>
+                    <button id="mail-editor-send" type="button">Send ↵</button>
+                </div>
+            </div>
+
+            <!-- prompt row -->
+            <form id="terminal-form" autocomplete="off" aria-label="Terminal input">
+                <div class="terminal-prompt">
+                    <span id="prompt-prefix" aria-hidden="true"><span style="color:#83ff08;">tegran@portfolio</span><span style="color:#555a7a;">:</span><span style="color:#8aadf4;">~</span><span style="color:#d3d7cf;">$</span></span>
+                    <div class="input-area-wrapper">
+                        <span id="input-mirror" class="input-mirror" aria-hidden="true"></span>
+                        <input id="terminal-input" class="terminal-input" type="text"
+                               autocomplete="off" spellcheck="false"
+                               aria-label="Enter a command" placeholder="type a command…" />
+                        <span id="ghost-text" class="ghost-text" aria-hidden="true"></span>
+                    </div>
+                </div>
+            </form>
+            <!-- tab suggestion strip (shown on double-tab) -->
+            <div id="tab-suggestions" role="listbox" aria-label="Tab completions"></div>
+        </div>
+
+
+    </div><!-- /#terminal -->
+    </div><!-- /#term-stage -->
+
+    <!-- ══════════════════════════════════════════
+         PORTFOLIO CONTENT (classic sections)
+    ══════════════════════════════════════════ -->
+    <div id="portfolio-content" style="display:none;">
+
+        <section id="projects" style="max-width:960px; margin:2em auto; background:#181a20; border-radius:1em; padding:2em; box-shadow:0 2px 16px #0002;">
+            <h2 class="term-green" style="margin-top:0;"><span class="section-heading-ascii">~/projects</span></h2>
+            <div style="display:flex; flex-wrap:wrap; gap:2em;">
+                <!-- Large project 1 -->
+                <div style="flex:1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_1.png') }}" alt="Woodix Kernel" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">"Woodix" — Kernel from Scratch</h3>
+                    <p>A custom kernel written in C, Rust, and Assembly; a re-implementation of the first version of Linux. I learned to build a bootloader, filesystem, scheduler, linkers, loaders, and system calls. I plan to expand into CUDA drivers, compilers, and advanced kernels.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-rust">Rust</span>, <span class="term-cpp">C</span>, <span class="term-assem">Assembly</span>, <span class="term-gnu">GNU</span></div>
+                    <a href="https://github.com/TegranGrigorian/Woodix" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
+                </div>
+                <!-- Large project 2 -->
+                <div style="flex:1 1 100%; background:#23203a; border-radius:0.7em; padding:1.5em; display:flex; flex-direction:column;">
+                    <img src="{{ url_for('static', filename='images/project_2.jpg') }}" alt="Autonomous Drone" style="width:100%; height:200px; object-fit:cover; border-radius:0.5em;">
                     <h3 class="term-magenta" style="margin:0.7em 0 0.3em 0;">Autonomous Drone Delivery System</h3>
-                    <p>A program to automate drone delivry of medical supplies. This is a project using open source resource such as the Flightory Stallion VTOL to construct a drone and pair it with a companian computer (Jetson Nano) to autonomously navigate the drone. The companian computer also runs a YOLO model to detect landing zones for the drone to drop off packages. I plan on open sourcing this project and documenting setup.</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-python">Python</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-docker">Docker</span>, <span class="term-js">Java Script</span>, <span class = "term-websocket"> HTML </span>,<span class="term-bash">Shell</span>, <span class="term-git">ROS</span>, <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/autonomous-drone-delivery" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#ff8308; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                    <p>Automated drone delivery of medical supplies using a Flightory Stallion VTOL paired with a Jetson Nano companion computer. A YOLO model detects landing zones autonomously. Plan to open-source with full docs.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-python">Python</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-docker">Docker</span>, <span class="term-js">JavaScript</span>, <span class="term-bash">Shell</span>, <span class="term-git">ROS</span>, <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span></div>
+                    <a href="https://github.com/TegranGrigorian/autonomous-drone-delivery" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#ff8308; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
-                <!-- Smaller Projects -->
+                <!-- Smaller projects -->
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_3.png') }}" alt="Project 3" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <img src="{{ url_for('static', filename='images/project_3.png') }}" alt="Website Portfolio" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
                     <h3 class="term-green" style="margin:0.7em 0 0.3em 0;">Website Portfolio</h3>
-                    <p>The web portfolio you are currently viewing, emulates a simple terminal, in the landing page and ui/ux. This project taught me how to use Web-dev tools and languages (sadly) and integrate them to Python's Flask framework. :)</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-js">JavaScript</span>, <span class="term-websocket">WebSocket</span>, <span class="term-flask">Flask</span>, <span class="term-websocket">HTML</span>, <span class="term-css">CSS</span>, <span class="term-python">Python</span>, <span class="term-docker">Docker</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/Website-Portfolio" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#0883ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                    <p>The portfolio you're viewing—terminal-themed, built with Flask, JavaScript, and CSS.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-js">JavaScript</span>, <span class="term-flask">Flask</span>, <span class="term-css">CSS</span>, <span class="term-python">Python</span>, <span class="term-docker">Docker</span></div>
+                    <a href="https://github.com/TegranGrigorian/Website-Portfolio" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#0883ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_4.png') }}" alt="Project 4" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
-                    <h3 class="term-cyan" style="margin:0.7em 0 0.3em 0;">Youtube to Mp3/Mp4 Converter</h3>
-                    <p>A application that allows the user to download Youtube videos as MP3s or MP4s. This projet taught me how to program file handling, safe multi-threading code with Rust and creating shell and install wizards for intuitive installation/uninstallation of the application.</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/yt-to-mp3-4" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                    <img src="{{ url_for('static', filename='images/project_4.png') }}" alt="YT Converter" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-cyan" style="margin:0.7em 0 0.3em 0;">YouTube → MP3/MP4 Converter</h3>
+                    <p>A Rust app to download YouTube videos as MP3 or MP4, with safe multithreading and shell install wizards for Linux and Windows.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span></div>
+                    <a href="https://github.com/TegranGrigorian/yt-to-mp3-4" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_5.png') }}" alt="Project 5" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
-                    <h3 class="term-yellow" style="margin:0.7em 0 0.3em 0;">First Robotics Competition (FRC) Swerve Drive Code</h3>
-                    <p>Code that allows a user to drive and automate a FRC swerve drive compeition robot. This project taught me how to use source control and write fast responding code in Java.</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-java">Java</span>, <span class="term-git">Git</span>, <span class="term-sqlite">ROS</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/216-FRC-" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#8308ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                    <img src="{{ url_for('static', filename='images/project_5.png') }}" alt="FRC Swerve" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-yellow" style="margin:0.7em 0 0.3em 0;">FRC Swerve Drive Code</h3>
+                    <p>Drive and autonomous code for an FRC swerve-drive competition robot. Taught fast-response code patterns and source control discipline in Java.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-java">Java</span>, <span class="term-git">Git</span></div>
+                    <a href="https://github.com/TegranGrigorian/216-FRC-" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#8308ff; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_6.jpg') }}" alt="Project 6" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
-                    <h3 class="term-red" style="margin:0.7em 0 0.3em 0;">"Trains++" - Satisfactory Software Modification</h3>
-                    <p>A software modificaiton to the game "Satisfactory" that adds high-speed trains. This project taught me how to use Visual Studio and the Unreal Engine to develop video games.</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-cpp">C++</span>, <span class="term-git">Git</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/TrainsPlusPlusMod" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#ff0883; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                    <img src="{{ url_for('static', filename='images/project_6.jpg') }}" alt="Trains++" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-red" style="margin:0.7em 0 0.3em 0;">"Trains++" — Satisfactory Mod</h3>
+                    <p>A game mod adding high-speed trains to Satisfactory, built with Unreal Engine and Visual Studio.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-cpp">C++</span>, <span class="term-git">Git</span></div>
+                    <a href="https://github.com/TegranGrigorian/TrainsPlusPlusMod" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#ff0883; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_7.png') }}" alt="Project 7" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <img src="{{ url_for('static', filename='images/project_7.png') }}" alt="Vex AI" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
                     <h3 class="term-green" style="margin:0.7em 0 0.3em 0;">Vex-AI Robot Code</h3>
-                    <p>A program to autonomously control a Vex AI robot with numerous control loop by detecing intended targets using a jetson nano running infrence on a camera with a YOLO V5 model. I've used the lessons and skills learned from this project to win the Vex-AI World Championship.</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics - YOLO Model (ML/AI)</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/VexAi-1248X-Slave" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                    <p>Autonomous Vex AI robot using a Jetson Nano + YOLO V5 for target detection. Won the Vex-AI World Championship.</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics YOLO (ML/AI)</span></div>
+                    <a href="https://github.com/TegranGrigorian/VexAi-1248X-Slave" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#83ff08; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
                 <div class="project-card" style="flex:1 1 250px; min-width:250px; background:#23203a; border-radius:0.7em; padding:1em; display:flex; flex-direction:column;">
-                    <img src="{{ url_for('static', filename='images/project_8.png') }}" alt="Project 8" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
-                    <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">Tiktok Cleaner</h3>
-                    <p>A fast Rust tool that scans and organizes TikTok media from Android phones using smart metadata analysis and multithreaded processing. It automatically sorts files by confidence, making phone cleanup and digital organization effortless. I learned how to develop software that is compatible on both Linux and Windows</p>
-                    <div style="margin-bottom:0.7em;">
-                        <span class="term-python">Languages/Frameworks:</span> <span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-shell">Shell</span>
-                    </div>
-                    <a href="https://github.com/TegranGrigorian/tiktok-cleaner" target="_blank" rel="noopener" style="margin-top:auto; margin-bottom:0; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block; margin-top:1em;">GitHub Repo</a>
+                    <img src="{{ url_for('static', filename='images/project_8.png') }}" alt="TikTok Cleaner" style="width:100%; height:120px; object-fit:cover; border-radius:0.5em;">
+                    <h3 class="term-blue" style="margin:0.7em 0 0.3em 0;">TikTok Cleaner</h3>
+                    <p>A multithreaded Rust tool that scans and organises TikTok media from Android phones using metadata analysis, cross-platform (Linux + Windows).</p>
+                    <div style="margin-bottom:0.7em;"><span class="term-python">Stack:</span> <span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span></div>
+                    <a href="https://github.com/TegranGrigorian/tiktok-cleaner" target="_blank" rel="noopener" style="margin-top:auto; background:#181a20; color:#729fcf; padding:0.4em 1em; border-radius:0.4em; text-decoration:none; font-weight:600; display:inline-block;">GitHub Repo</a>
                 </div>
             </div>
         </section>
 
-        <section style="max-width: 900px; margin: 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
-            <h2 class="term-cyan" style="margin-top:0;">Experience</h2>
+        <section id="experience" style="max-width:960px; margin:2em auto; background:#181a20; border-radius:1em; padding:2em; box-shadow:0 2px 16px #0002;">
+            <h2 class="term-cyan" style="margin-top:0;"><span class="section-heading-ascii">~/experience</span></h2>
             <ul style="list-style:none; padding:0;">
                 <li style="margin-bottom:1.5em;">
-                    <div class="term-yellow" style="font-weight:bold;">2024 - Present: Westwood AI - Software Engineer</div>
-                    <div>Worked with peers to automate capture of commerical property to reconstruct 3D models on the building, run AI detection on anomalies, handle data with SQL and automated report genertaion for insurance claims. Currently Im leading a group of 9 interns in further development of our software, specifically in automation through python scripts and ML/AI.</div>
-                    <div style="margin-top:0.5em;">
-                        <span class="term-blue" style="font-weight:600;">Frameworks/Languages:</span> <span class="term-python">Python</span>, <span class="term-flask">Flask</span>, <span class="term-websocket">JavaScript</span>, <span class="term-docker">Docker</span>, <span class="term-sqlite">SQLite</span>, <span class="term-rich">AWS</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>, <span class="term-cpp">C#</span>, <span class="term-gnu">Label Studio</span>, <span class="term-mavlink">Linux</span>
-                    </div>
+                    <div class="term-yellow" style="font-weight:bold;">2024 – Present · Westwood AI — Software Engineer</div>
+                    <div>Automated capture of commercial property to reconstruct 3D models, ran AI anomaly detection, handled data with SQL, and automated report generation for insurance claims. Currently leading a team of 9 interns in Python automation and ML/AI pipelines.</div>
+                    <div style="margin-top:0.5em;"><span class="term-blue" style="font-weight:600;">Stack:</span> <span class="term-python">Python</span>, <span class="term-flask">Flask</span>, <span class="term-js">JavaScript</span>, <span class="term-docker">Docker</span>, <span class="term-sqlite">SQLite</span>, <span class="term-rich">AWS</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>, <span class="term-cpp">C#</span>, <span class="term-gnu">Label Studio</span>, <span class="term-mavlink">Linux</span></div>
                 </li>
                 <li style="margin-bottom:1.5em;">
-                    <div class="term-green" style="font-weight:bold;">2020 - 2024: High-School Robotics</div>
-                    <div>Contributed and lead several teams to build and code robots to compete in high level compeition. During my time in robotics, I won numerous prestigous awards including, an FRC District-Championship, Vex-AI World Championship and Michigan Vex State Championship. I also taught many of my peers how to program and open sourced my code.</div>
-                    <div style="margin-top:0.5em;">
-                        <span class="term-blue" style="font-weight:600;">Frameworks/Languages:</span> <span class="term-python">Python</span>, <span class="term-java">Bash</span>, <span class="term-git">Git</span>, <span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-gnu">GNU</span>, <span class="term-websocket">Linux</span>
-                    </div>
+                    <div class="term-green" style="font-weight:bold;">2020 – 2024 · High-School Robotics</div>
+                    <div>Led multiple teams to build and program competition robots. Awards: FRC District Championship, Vex-AI World Championship, Michigan Vex State Championship. Open-sourced code and mentored peers in programming.</div>
+                    <div style="margin-top:0.5em;"><span class="term-blue" style="font-weight:600;">Stack:</span> <span class="term-python">Python</span>, <span class="term-bash">Bash</span>, <span class="term-git">Git</span>, <span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-gnu">GNU</span>, <span class="term-websocket">Linux</span></div>
                 </li>
             </ul>
         </section>
 
-        <section id="contact" style="max-width: 900px; margin: 2em auto; background: #181a20; border-radius: 1em; padding: 2em; box-shadow: 0 2px 16px #0002;">
-            <h2 class="term-yellow" style="margin-top:0;">Contact Me</h2>
+        <section id="contact" style="max-width:960px; margin:2em auto; background:#181a20; border-radius:1em; padding:2em; box-shadow:0 2px 16px #0002;">
+            <h2 class="term-yellow" style="margin-top:0;"><span class="section-heading-ascii">~/contact</span></h2>
             <form action="/send-email" method="POST" style="display:flex; flex-direction:column; gap:1em; max-width:500px; margin:auto;">
-                <input type="text" name="name" placeholder="Your Name" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff;">
-                <input type="email" name="email" placeholder="Your Email" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff;">
-                <textarea name="message" placeholder="Your Message" rows="5" required style="padding:0.7em; border-radius:0.4em; border:1px solid #23203a; background:#23203a; color:#fff; resize:none;"></textarea>
+                <input type="text"  name="name"    placeholder="Your Name"    required style="padding:0.7em; border-radius:0.4em; border:1px solid #2a2d3a; background:#23203a; color:#fff;">
+                <input type="email" name="email"   placeholder="Your Email"   required style="padding:0.7em; border-radius:0.4em; border:1px solid #2a2d3a; background:#23203a; color:#fff;">
+                <textarea name="message" placeholder="Your Message" rows="5"  required style="padding:0.7em; border-radius:0.4em; border:1px solid #2a2d3a; background:#23203a; color:#fff; resize:none;"></textarea>
                 <button type="submit" style="background:#729fcf; color:#181a20; font-weight:700; border:none; border-radius:0.4em; padding:0.8em 1.5em; cursor:pointer;">Send Message</button>
             </form>
         </section>
 
-    </div>
+    </div><!-- end #portfolio-content -->
 
     <script>
-    // filepath: Website-Portfolio/templates/home.html
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('terminal-form');
-        const input = document.getElementById('terminal-input');
-        const error = document.getElementById('terminal-error');
-        const greeting = document.getElementById('terminal-greeting');
-        const neofetch = document.getElementById('neofetch-output');
-        const content = document.getElementById('portfolio-content');
+    document.addEventListener('DOMContentLoaded', function () {
 
-        // Automatically focus input on load
-        input.focus();
+        /* ── DOM refs ── */
+        const input       = document.getElementById('terminal-input');
+        const history     = document.getElementById('term-history');
+        const form        = document.getElementById('terminal-form');
+        const bootEl      = document.getElementById('boot-lines');
+        const content     = document.getElementById('portfolio-content');
+        const termContent = document.getElementById('terminal-content');
+        const loadingScreen  = document.getElementById('loading-screen');
+        const loadingLinesEl = document.getElementById('loading-lines');
+        const termEl         = document.getElementById('terminal');
+        const ghostEl     = document.getElementById('ghost-text');
+        const mirrorEl    = document.getElementById('input-mirror');
+        const tabSugEl    = document.getElementById('tab-suggestions');
 
-        // Check if neofetch has already been entered
-        let neofetchEntered = sessionStorage.getItem('neofetchEntered') === 'true';
+        /* ── Minimize / Maximize ── */
+        let termMinimized = false;
+        const termStage = document.getElementById('term-stage');
+        function minimizeTerminal() {
+            termEl.classList.add('minimized');
+            termStage.classList.add('stage-minimized');
+            termMinimized = true;
+        }
+        function maximizeTerminal() {
+            termEl.classList.remove('minimized');
+            termStage.classList.remove('stage-minimized');
+            termMinimized = false;
+            input.focus();
+        }
+        document.getElementById('dot-yellow').addEventListener('click', () =>
+            termMinimized ? maximizeTerminal() : minimizeTerminal()
+        );
+        document.getElementById('dot-green').addEventListener('click', () => maximizeTerminal());
 
-        if (neofetchEntered) {
-            greeting.style.display = 'none';
-            neofetch.style.display = '';
-            content.style.display = '';
-            content.classList.remove('fade-in'); // Ensure no animation on reload
-        } else {
-            content.style.display = 'none';
+        /* ── Mail form state (declared early so keydown can reference it) ── */
+        let formActive = false;   // false | true | 'confirm'
+        let formStep   = 0;
+        let formData   = {};
+        let editorActive = false;
+
+        /* ── TUI editor refs ── */
+        const mailEditorEl  = document.getElementById('mail-editor');
+        const mailEditorTA  = document.getElementById('mail-editor-textarea');
+        const mailEditorBtn = document.getElementById('mail-editor-send');
+        const mailFileInput = document.getElementById('mail-file-input');
+        const mailAttachBtn = document.getElementById('mail-attach-btn');
+        const mailLinkBtn   = document.getElementById('mail-link-btn');
+        const mailAttachEl  = document.getElementById('mail-attachments');
+        const mailLinkPop   = document.getElementById('mail-link-popover');
+        const linkLabelInp  = document.getElementById('link-label-input');
+        const linkUrlInp    = document.getElementById('link-url-input');
+        const linkInsertBtn = document.getElementById('link-insert-btn');
+        let attachedFiles   = [];   // File[] selected by user
+
+        /* ── Helpers ── */
+        function appendLine(html, cls = '') {
+            const d = document.createElement('div');
+            d.className = 'term-line ' + cls;
+            d.innerHTML = html;
+            history.appendChild(d);
+            termContent.scrollTop = termContent.scrollHeight;
         }
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const cmd = input.value.trim().toLowerCase();
-            if (cmd === 'neofetch') {
-                greeting.style.display = 'none';
-                neofetch.style.display = '';
-                input.value = '';
-                error.style.display = 'none';
+        function echoCmd(cmd) {
+            appendLine(
+                `<span style="color:#83ff08;">tegran@portfolio</span><span style="color:#555a7a;">:</span><span style="color:#8aadf4;">~</span><span style="color:#d3d7cf;">$</span> <span class="term-cmd-echo">${escHtml(cmd)}</span>`
+            );
+        }
 
-                // Show the rest of the portfolio with fade-in animation
-                content.style.display = '';
-                setTimeout(() => {
-                    content.classList.remove('fade-in'); // Remove animation class after it runs
-                }, 500); // Match the fade-in animation duration
-                sessionStorage.setItem('neofetchEntered', 'true');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else if (cmd) {
-                error.style.display = 'block';
-                input.value = '';
+        function escHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function showContent() {
+            content.style.display = '';
+            content.classList.add('fade-in');
+            setTimeout(() => content.classList.remove('fade-in'), 600);
+            sessionStorage.setItem('portfolioVisible', 'true');
+        }
+
+        /* ── Tab autocomplete ── */
+        const ALL_CMDS = [
+            'help', 'neofetch', 'whoami', 'pwd', 'uname -a',
+            'ls', 'ls projects', 'ls experience', 'ls skills',
+            'cat about', 'cat projects', 'cat experience',
+            'git log', 'htop',
+            'clear', 'skip', 'contact', 'mail', 'open github', 'open linkedin',
+            'exit', 'reboot', 'sudo shutdown now',
+        ];
+
+        let tabMatches = [];
+        let tabIdx = -1;
+
+        function updateInputWidth() {
+            const val = input.value;
+            mirrorEl.textContent = val;
+            if (!val) {
+                // Empty: let input fill wrapper so placeholder shows; ghost is empty anyway
+                input.style.flex  = '1';
+                input.style.width = '';
+            } else {
+                // Typing: shrink input to exact text width so ghost sits right after
+                input.style.flex  = '0 0 auto';
+                input.style.width = (mirrorEl.offsetWidth + 4) + 'px';
+            }
+        }
+
+        function updateGhost() {
+            const typed = input.value;
+            if (!typed) { ghostEl.textContent = ''; return; }
+            const match = ALL_CMDS.find(c =>
+                c.toLowerCase().startsWith(typed.toLowerCase()) &&
+                c.toLowerCase() !== typed.toLowerCase()
+            );
+            ghostEl.textContent = match ? match.slice(typed.length) : '';
+        }
+
+        function showTabSuggestions(matches, activeIdx) {
+            if (matches.length <= 1) { tabSugEl.style.display = 'none'; return; }
+            tabSugEl.innerHTML = matches.map((m, i) =>
+                `<span class="tab-sug-item${i === activeIdx ? ' active' : ''}" data-cmd="${escHtml(m)}">${escHtml(m)}</span>`
+            ).join('');
+            tabSugEl.style.display = 'flex';
+            tabSugEl.querySelectorAll('.tab-sug-item').forEach(el => {
+                el.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    input.value = el.dataset.cmd;
+                    updateInputWidth();
+                    updateGhost();
+                    hideSuggestions();
+                    input.focus();
+                });
+            });
+        }
+
+        function hideSuggestions() {
+            tabSugEl.style.display = 'none';
+            tabMatches = [];
+            tabIdx = -1;
+        }
+
+        input.addEventListener('input', function () {
+            tabMatches = [];
+            tabIdx = -1;
+            hideSuggestions();
+            updateInputWidth();
+            updateGhost();
+        });
+
+        input.addEventListener('keydown', function (e) {
+
+            /* ── Ctrl+L: clear terminal ── */
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                cmdClear();
+                return;
+            }
+
+            /* ── Ctrl+C: cancel mail form (or just echo ^C if not in form) ── */
+            if (e.ctrlKey && e.key === 'c') {
+                if (formActive) {
+                    e.preventDefault();
+                    cancelForm();
+                }
+                return;
+            }
+
+            /* ── Tab completion ── */
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                if (formActive) return;
+                const typed = input.value;
+                if (tabMatches.length === 0) {
+                    tabMatches = ALL_CMDS.filter(c => c.toLowerCase().startsWith(typed.toLowerCase()));
+                }
+                if (tabMatches.length === 0) return;
+                if (tabMatches.length === 1) {
+                    // Only one match — complete immediately
+                    input.value = tabMatches[0];
+                    tabIdx = 0;
+                    hideSuggestions();
+                } else {
+                    // Cycle through matches
+                    tabIdx = (tabIdx + 1) % tabMatches.length;
+                    input.value = tabMatches[tabIdx];
+                    showTabSuggestions(tabMatches, tabIdx);
+                }
+                updateInputWidth();
+                updateGhost();
+                return;
+            }
+
+            /* ── Accept inline ghost on ArrowRight at end ── */
+            if (e.key === 'ArrowRight' && ghostEl.textContent &&
+                input.selectionStart === input.value.length) {
+                e.preventDefault();
+                input.value += ghostEl.textContent;
+                ghostEl.textContent = '';
+                updateInputWidth();
+                return;
+            }
+
+            /* ── History navigation ── */
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (formActive) return;
+                if (histIdx < cmdHistory.length - 1) {
+                    histIdx++;
+                    input.value = cmdHistory[cmdHistory.length - 1 - histIdx];
+                    updateInputWidth();
+                    updateGhost();
+                }
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (formActive) return;
+                if (histIdx > 0) {
+                    histIdx--;
+                    input.value = cmdHistory[cmdHistory.length - 1 - histIdx];
+                } else {
+                    histIdx = -1;
+                    input.value = '';
+                }
+                updateInputWidth();
+                updateGhost();
+                return;
+            }
+
+            /* ── Escape: clear input / cancel form ── */
+            if (e.key === 'Escape') {
+                if (formActive) {
+                    cancelForm();
+                } else {
+                    input.value = '';
+                    ghostEl.textContent = '';
+                    hideSuggestions();
+                    updateInputWidth();
+                }
+                return;
+            }
+
+            /* reset tab cycle on any typing key */
+            if (e.key !== 'Tab' && e.key !== 'Shift') {
+                if (tabMatches.length > 0 && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+                    hideSuggestions();
+                }
             }
         });
 
-        input.addEventListener('input', function() {
-            error.style.display = 'none';
+        /* ── Command definitions ── */
+        const COMMANDS = {
+            'help':         cmdHelp,
+            'neofetch':     cmdNeofetch,
+            'whoami':       cmdWhoami,
+            'pwd':          cmdPwd,
+            'uname':        cmdUname,
+            'uname -a':     cmdUname,
+            'ls':           cmdLs,
+            'ls projects':  cmdLsProjects,
+            'ls experience':cmdLsExperience,
+            'cat about':    cmdCatAbout,
+            'cat projects': cmdLsProjects,
+            'cat experience':cmdLsExperience,
+            'clear':              cmdClear,
+            'skip':               cmdSkip,
+            'contact':            cmdMail,
+            'mail':               cmdMail,
+            'ls skills':          cmdLsSkills,
+            'git log':            cmdGitLog,
+            'htop':               cmdHtop,
+            'exit':               cmdReboot,
+            'reboot':             cmdReboot,
+            'sudo shutdown now':  cmdReboot,
+            'open github':  () => window.open('https://github.com/TegranGrigorian', '_blank'),
+            'open linkedin':() => window.open('https://www.linkedin.com/in/tegran-grigorian/', '_blank'),
+        };
+
+        function runCmd(raw) {
+            const cmd = raw.trim().toLowerCase();
+            if (!cmd) return;
+            echoCmd(raw.trim());
+            hideSuggestions();
+            ghostEl.textContent = '';
+            if (COMMANDS[cmd]) {
+                COMMANDS[cmd]();
+            } else {
+                appendLine(`<span style="color:#ff5f56;">bash: ${escHtml(raw.trim())}: command not found</span><br><span style="color:#b39ddb;">Try <span style="color:#83ff08;">help</span> to see available commands.</span>`);
+            }
+        }
+
+        /* ── Commands ── */
+        function cmdHelp() {
+            appendLine(`<div class="term-output-block">
+<table class="help-table" aria-label="Available commands">
+  <tr><td>neofetch</td><td>Show profile &amp; system info</td></tr>
+  <tr><td>whoami</td><td>Who am I?</td></tr>
+  <tr><td>pwd</td><td>Print current directory</td></tr>
+  <tr><td>uname -a</td><td>System info</td></tr>
+  <tr><td>ls</td><td>List home directory</td></tr>
+  <tr><td>ls projects</td><td>Full project cards with details</td></tr>
+  <tr><td>ls experience</td><td>Full experience entries</td></tr>
+  <tr><td>cat about</td><td>Read about me</td></tr>
+  <tr><td>ls skills</td><td>List skills as Unix files</td></tr>
+  <tr><td>git log</td><td>Commit history — career milestones</td></tr>
+  <tr><td>htop</td><td>Skills as running processes w/ CPU bars</td></tr>
+  <tr><td>skip</td><td>Skip to classic portfolio view</td></tr>
+  <tr><td>contact / mail</td><td>Compose &amp; send a message (multi-step)</td></tr>
+  <tr><td>exit / reboot</td><td>Return to GRUB boot menu</td></tr>
+  <tr><td>open github</td><td>Open GitHub profile</td></tr>
+  <tr><td>open linkedin</td><td>Open LinkedIn profile</td></tr>
+  <tr><td>clear</td><td>Clear terminal</td></tr>
+  <tr><td colspan="2" style="color:#555a7a; padding-top:0.5em;">↹ Tab — autocomplete &nbsp;|&nbsp; ↑↓ — history &nbsp;|&nbsp; → — accept ghost &nbsp;|&nbsp; Ctrl+L — clear &nbsp;|&nbsp; Ctrl+C — cancel</td></tr>
+</table></div>`);
+        }
+
+        function cmdNeofetch() {
+            appendLine(`<div class="neofetch-layout">
+  <img src="/static/images/neo_fetch.jpg" alt="Profile" class="neofetch-image">
+  <div class="neofetch-info">
+    <span style="color:#8aadf4;">tegran@portfolio</span><br>
+    <span style="color:#b39ddb;">─────────────────────</span><br>
+    <span style="color:#fcaf3e;">OS</span>: <span style="color:#83ff08;">Woodix/GNU</span><br>
+    <span style="color:#fcaf3e;">Kernel</span>: <span style="color:#83ff08;">Woodix (custom)</span><br>
+    <span style="color:#fcaf3e;">Age</span>: <span style="color:#83ff08;">19</span><br>
+    <span style="color:#fcaf3e;">Education</span>: <span style="color:#83ff08;">Pursuing CE @ Grand Valley State University</span><br>
+    <span style="color:#fcaf3e;">Hobbies</span>: <span style="color:#83ff08;">Gaming, Snowboarding, Coding</span><br>
+    <span style="color:#fcaf3e;">Languages</span>: <span style="color:#83ff08;">Rust, C/C++, Python</span><br>
+    <span style="color:#fcaf3e;">Favorite Shows</span>: <span style="color:#83ff08;">Breaking Bad, NGE, 86</span><br>
+    <span style="color:#fcaf3e;">Favorite Movies</span>: <span style="color:#83ff08;">Dark Knight, Dune Pt.2</span><br>
+    <div class="color-table">
+      <div class="color-box black"></div><div class="color-box red"></div>
+      <div class="color-box green"></div><div class="color-box yellow"></div>
+      <div class="color-box blue"></div><div class="color-box magenta"></div>
+      <div class="color-box cyan"></div><div class="color-box white"></div>
+    </div>
+    <span style="color:#b39ddb;">─────────────────────</span>
+  </div>
+</div>`);
+        }
+
+        function cmdWhoami() {
+            appendLine(`<span style="color:#83ff08;">tegran</span> — Software Engineer | Low-level dev | ML/AI enthusiast`);
+        }
+
+        function cmdPwd() {
+            appendLine(`<span style="color:#8aadf4;">/home/tegran/portfolio</span>`);
+        }
+
+        function cmdUname() {
+            appendLine(`<span style="color:#83ff08;">Woodix</span> portfolio-host 1.0.0-woodix #1 SMP Mon Jan 01 00:00:00 UTC 2025 x86_64 GNU/Linux`);
+        }
+
+        function cmdLs() {
+            appendLine(`<div class="ls-grid">
+  <span class="ls-dir">about</span>
+  <span class="ls-dir">projects/</span>
+  <span class="ls-dir">experience/</span>
+  <span class="ls-dir">contact/</span>
+  <span class="ls-file">resume.pdf</span>
+  <span class="ls-file">.gitconfig</span>
+  <span class="ls-file">.bashrc</span>
+</div>`);
+        }
+
+        /* Full project cards rendered inside terminal */
+        function cmdLsProjects() {
+            const projects = [
+                {
+                    img: '/static/images/project_1.png',
+                    color: '#729fcf',
+                    borderColor: '#729fcf',
+                    title: '"Woodix" — Kernel from Scratch',
+                    desc: 'A custom kernel in C, Rust, and Assembly — re-implementation of the first Linux. Bootloader, filesystem, scheduler, linkers, loaders, syscalls. Expanding into CUDA drivers, compilers, and advanced kernels.',
+                    stack: `<span class="term-rust">Rust</span>, <span class="term-cpp">C</span>, <span class="term-assem">Assembly</span>, <span class="term-gnu">GNU</span>`,
+                    url: 'https://github.com/TegranGrigorian/Woodix',
+                },
+                {
+                    img: '/static/images/project_2.jpg',
+                    color: '#ff8308',
+                    borderColor: '#ff8308',
+                    title: 'Autonomous Drone Delivery System',
+                    desc: 'VTOL drone + Jetson Nano companion computer running a YOLO model for landing zone detection. Fully autonomous medical supply delivery. Plan to open-source with docs.',
+                    stack: `<span class="term-python">Python</span>, <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-docker">Docker</span>, <span class="term-git">ROS</span>, <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span>`,
+                    url: 'https://github.com/TegranGrigorian/autonomous-drone-delivery',
+                },
+                {
+                    img: '/static/images/project_3.png',
+                    color: '#83ff08',
+                    borderColor: '#83ff08',
+                    title: 'Website Portfolio',
+                    desc: 'The terminal-themed portfolio you\'re currently viewing. Built with Flask, JavaScript, and CSS. Taught me web-dev tooling and Python\'s Flask framework.',
+                    stack: `<span class="term-js">JavaScript</span>, <span class="term-flask">Flask</span>, <span class="term-css">CSS</span>, <span class="term-python">Python</span>, <span class="term-docker">Docker</span>`,
+                    url: 'https://github.com/TegranGrigorian/Website-Portfolio',
+                },
+                {
+                    img: '/static/images/project_4.png',
+                    color: '#08ff83',
+                    borderColor: '#08ff83',
+                    title: 'YouTube → MP3/MP4 Converter',
+                    desc: 'A Rust app to download YouTube videos as MP3 or MP4 with safe multithreading and shell install wizards for Linux and Windows.',
+                    stack: `<span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>`,
+                    url: 'https://github.com/TegranGrigorian/yt-to-mp3-4',
+                },
+                {
+                    img: '/static/images/project_5.png',
+                    color: '#ff8308',
+                    borderColor: '#ff8308',
+                    title: 'FRC Swerve Drive Code',
+                    desc: 'Drive and autonomous code for an FRC swerve-drive competition robot. Fast-response code patterns and source control discipline in Java.',
+                    stack: `<span class="term-java">Java</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/216-FRC-',
+                },
+                {
+                    img: '/static/images/project_6.jpg',
+                    color: '#ff0883',
+                    borderColor: '#ff0883',
+                    title: '"Trains++" — Satisfactory Mod',
+                    desc: 'A game mod adding high-speed trains to Satisfactory, built with Unreal Engine and Visual Studio.',
+                    stack: `<span class="term-cpp">C++</span>, <span class="term-git">Git</span>`,
+                    url: 'https://github.com/TegranGrigorian/TrainsPlusPlusMod',
+                },
+                {
+                    img: '/static/images/project_7.png',
+                    color: '#83ff08',
+                    borderColor: '#83ff08',
+                    title: 'Vex-AI Robot Code',
+                    desc: 'Autonomous Vex AI robot using a Jetson Nano + YOLO V5 for target detection across multiple control loops. Won the Vex-AI World Championship.',
+                    stack: `<span class="term-cpp">C/C++</span>, <span class="term-ultralytics">Ultralytics YOLO (ML/AI)</span>`,
+                    url: 'https://github.com/TegranGrigorian/VexAi-1248X-Slave',
+                },
+                {
+                    img: '/static/images/project_8.png',
+                    color: '#729fcf',
+                    borderColor: '#729fcf',
+                    title: 'TikTok Cleaner',
+                    desc: 'Multithreaded Rust tool that scans and organises TikTok media from Android phones using metadata analysis. Cross-platform (Linux + Windows).',
+                    stack: `<span class="term-rust">Rust</span>, <span class="term-git">Git</span>, <span class="term-bash">Shell</span>`,
+                    url: 'https://github.com/TegranGrigorian/tiktok-cleaner',
+                },
+            ];
+
+            let html = `<div style="color:#555a7a; font-size:0.82em; margin-bottom:0.5em;">total ${projects.length} &nbsp;— &nbsp;<span style="color:#8aadf4;">ls projects/</span></div>`;
+            projects.forEach(p => {
+                html += `<div class="term-full-card" style="border-left-color:${p.borderColor}">
+  <img src="${p.img}" alt="${p.title}" class="term-card-thumb" onerror="this.style.display='none'">
+  <div class="term-card-body">
+    <div class="term-card-title" style="color:${p.color}">${p.title}</div>
+    <div class="term-card-desc">${p.desc}</div>
+    <div class="term-card-stack"><span style="color:#b39ddb;">stack</span>: ${p.stack}</div>
+    <div class="term-card-link">→ <a href="${p.url}" target="_blank" rel="noopener">${p.url.replace('https://','')}</a></div>
+  </div>
+</div>`;
+            });
+            appendLine(`<div class="term-output-block">${html}</div>`);
+        }
+
+        /* Full experience blocks rendered inside terminal */
+        function cmdLsExperience() {
+            appendLine(`<div class="term-output-block">
+<div style="color:#555a7a; font-size:0.82em; margin-bottom:0.5em;">2 entries &nbsp;— &nbsp;<span style="color:#8aadf4;">ls experience/</span></div>
+
+<div class="term-exp-block">
+  <div style="color:#ff8308; font-weight:700; margin-bottom:0.4em;">2024 – Present &nbsp;·&nbsp; <span style="color:#83ff08;">Westwood AI</span> — Software Engineer</div>
+  <div style="color:#d3d7cf; font-size:0.88em; line-height:1.6; margin-bottom:0.5em;">Automated capture of commercial property to reconstruct 3D models, ran AI anomaly detection, handled data with SQL, and automated report generation for insurance claims. Currently leading a team of 9 interns in Python automation and ML/AI pipelines.</div>
+  <div style="font-size:0.82em;"><span style="color:#b39ddb;">stack</span>:
+    <span class="term-python">Python</span>, <span class="term-flask">Flask</span>,
+    <span class="term-js">JavaScript</span>, <span class="term-docker">Docker</span>,
+    <span class="term-sqlite">SQLite</span>, <span class="term-rich">AWS</span>,
+    <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-git">Git</span>,
+    <span class="term-bash">Shell</span>, <span class="term-cpp">C#</span>,
+    <span class="term-gnu">Label Studio</span>, <span class="term-mavlink">Linux</span>
+  </div>
+</div>
+
+<div class="term-exp-block" style="border-left-color:#83ff08;">
+  <div style="color:#ff8308; font-weight:700; margin-bottom:0.4em;">2020 – 2024 &nbsp;·&nbsp; <span style="color:#83ff08;">High-School Robotics</span></div>
+  <div style="color:#d3d7cf; font-size:0.88em; line-height:1.6; margin-bottom:0.5em;">Led multiple teams to build and program competition robots. <span style="color:#fcaf3e;">Awards:</span> FRC District Championship, Vex-AI World Championship, Michigan Vex State Championship. Open-sourced code and mentored peers in programming.</div>
+  <div style="font-size:0.82em;"><span style="color:#b39ddb;">stack</span>:
+    <span class="term-python">Python</span>, <span class="term-bash">Bash</span>,
+    <span class="term-git">Git</span>, <span class="term-cpp">C/C++</span>,
+    <span class="term-ultralytics">Ultralytics (ML/AI)</span>, <span class="term-gnu">GNU</span>,
+    <span class="term-websocket">Linux</span>
+  </div>
+</div>
+</div>`);
+        }
+
+        function cmdCatAbout() {
+            appendLine(`<div class="term-output-block" style="border-left:3px solid #83ff08; padding-left:1em;">
+  <span style="color:#fcaf3e;">name</span>:     <span style="color:#83ff08;">Tegran Grigorian</span><br>
+  <span style="color:#fcaf3e;">role</span>:     <span style="color:#83ff08;">Software Engineer</span><br>
+  <span style="color:#fcaf3e;">edu</span>:      <span style="color:#83ff08;">Pursuing CE @ GVSU → transferring to UMich</span><br>
+  <span style="color:#fcaf3e;">languages</span>: <span class="term-rust">Rust</span>, <span class="term-cpp">C/C++</span>, <span class="term-python">Python</span><br>
+  <span style="color:#fcaf3e;">bio</span>:      <span style="color:#d3d7cf;">Passionate low-level developer. Loves building kernels, ML/AI automation pipelines, and anything that runs fast. Open-sources work and loves to teach.</span><br>
+  <span style="color:#fcaf3e;">github</span>:   <a href="https://github.com/TegranGrigorian" target="_blank" rel="noopener" style="color:#8aadf4;">github.com/TegranGrigorian</a><br>
+  <span style="color:#fcaf3e;">linkedin</span>: <a href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank" rel="noopener" style="color:#8aadf4;">linkedin.com/in/tegran-grigorian</a>
+</div>`);
+        }
+
+        function cmdContact() { cmdMail(); }
+
+        function cmdClear() {
+            history.innerHTML = '';
+        }
+
+        function cmdSkip() {
+            showContent();
+            minimizeTerminal();
+            setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 550);
+        }
+
+        function cmdReboot() {
+            appendLine(`<span style="color:#729fcf;">[  OK  ] Stopping session services…</span>`);
+            setTimeout(() => appendLine(`<span style="color:#729fcf;">[  OK  ] Unmounting /home/tegran…</span>`), 280);
+            setTimeout(() => appendLine(`<span style="color:#83ff08;">[  OK  ] Returning to boot menu.</span>`), 560);
+            setTimeout(() => {
+                sessionStorage.removeItem('grubPassed');
+                sessionStorage.removeItem('booted');
+                sessionStorage.removeItem('portfolioVisible');
+                window.location.reload();
+            }, 1050);
+        }
+
+        /* ── ls skills ── */
+        function cmdLsSkills() {
+            const files = [
+                { perm: '-rwxr-xr-x', name: 'rust',            date: 'Nov 14  2022', color: '#ff8308' },
+                { perm: '-rwxr-xr-x', name: 'c-cpp',           date: 'Mar  6  2018', color: '#729fcf' },
+                { perm: '-rwxr-xr-x', name: 'assembly',        date: 'Apr 22  2019', color: '#fcaf3e' },
+                { perm: '-rwxr-xr-x', name: 'python',          date: 'Feb  3  2020', color: '#83ff08' },
+                { perm: '-rwxr-xr-x', name: 'linux-unix',      date: 'Sep  1  2021', color: '#27c93f' },
+                { perm: '-rwxr-xr-x', name: 'machine-learning',date: 'May 15  2023', color: '#b39ddb' },
+                { perm: '-rwxr-xr-x', name: 'cuda',            date: 'Jun 20  2023', color: '#8aadf4' },
+                { perm: '-rwxr-xr-x', name: 'docker',          date: 'Aug 12  2021', color: '#0db7ed' },
+                { perm: '-rwxr-xr-x', name: 'git',             date: 'Jan  1  2020', color: '#ff5f56' },
+                { perm: '-rw-r--r--', name: 'verilog-fpga',    date: 'Mar  1  2024', color: '#555a7a' },
+                { perm: '-rw-r--r--', name: 'ros',             date: 'Jan  5  2024', color: '#555a7a' },
+            ];
+            const rows = files.map(f =>
+                `<span style="color:#555a7a;">${f.perm} tegran tegran 4.0K ${f.date} </span><span style="color:${f.color}; font-weight:700;">${f.name}</span>`
+            ).join('\n');
+            appendLine(`<div class="term-output-block"><span style="color:#555a7a;">total ${files.length * 4}K</span>\n${rows}</div>`);
+        }
+
+        /* ── git log ── */
+        function cmdGitLog() {
+            const commits = [
+                {
+                    hash:   'a3f4d2e',
+                    ref:    ' (HEAD -> main, origin/main)',
+                    date:   'Tue Jan  1 00:00:00 2025',
+                    msg:    'feat: add CUDA driver layer &amp; interrupt scheduler to Woodix',
+                    body:   'PCIe enumeration, MSI-X routing, and GPU command queue.'
+                },
+                {
+                    hash:   'b9c2e51',
+                    ref:    '',
+                    date:   'Fri Nov 14 00:00:00 2024',
+                    msg:    'feat: ELF loader + dynamic linker in Woodix kernel',
+                    body:   'Full PLT/GOT resolution; shared library support.'
+                },
+                {
+                    hash:   'c7d8a30',
+                    ref:    '',
+                    date:   'Sat Aug  3 00:00:00 2024',
+                    msg:    'feat: autonomous VTOL drone — YOLO landing zone detection',
+                    body:   'Jetson Nano companion computer, ROS integration, open-source release.'
+                },
+                {
+                    hash:   'd1e9f42',
+                    ref:    '',
+                    date:   'Mon Apr 22 00:00:00 2024',
+                    msg:    'feat: FRC District Championship — robot arm vision targeting',
+                    body:   'Award: Michigan FRC District Championship + Vex-AI World Championship.'
+                },
+                {
+                    hash:   'e5f0b63',
+                    ref:    '',
+                    date:   'Thu Nov 14 00:00:00 2022',
+                    msg:    'init: started learning Rust — rewrote YT-mp3 tool in safe Rust',
+                    body:   'Zero unsafe blocks; multithreaded with rayon.'
+                },
+                {
+                    hash:   'f3a1c74',
+                    ref:    '',
+                    date:   'Tue Sep  1 00:00:00 2020',
+                    msg:    'init: first kernel commit — Woodix bootloader in Assembly/C',
+                    body:   'Stage-1 BIOS bootloader; enters protected mode.'
+                },
+            ];
+            const html = commits.map(c => `<div class="git-commit">
+  <span class="git-hash">commit ${c.hash}</span><span class="git-ref">${c.ref}</span>
+  <div class="git-author">Author: Tegran Grigorian &lt;tegran@woodix.dev&gt;</div>
+  <div class="git-date">Date:   ${c.date}</div>
+  <div class="git-msg">${c.msg}</div>
+  <div class="git-msg-body">${c.body}</div>
+</div>`).join('');
+            appendLine(`<div class="term-output-block">${html}</div>`);
+        }
+
+        /* ── htop ── */
+        let htopActive = false;
+
+        function cmdHtop() {
+            const procs = [
+                { pid: '001', cpu: 99.9, cmd: 'rust',            color: '#ff8308' },
+                { pid: '002', cpu: 97.2, cmd: 'c/c++',           color: '#729fcf' },
+                { pid: '003', cpu: 94.5, cmd: 'assembly',        color: '#fcaf3e' },
+                { pid: '004', cpu: 89.1, cmd: 'python',          color: '#83ff08' },
+                { pid: '005', cpu: 82.4, cmd: 'linux-unix',      color: '#27c93f' },
+                { pid: '006', cpu: 75.8, cmd: 'machine-learning',color: '#b39ddb' },
+                { pid: '007', cpu: 68.3, cmd: 'cuda',            color: '#8aadf4' },
+                { pid: '008', cpu: 61.7, cmd: 'docker',          color: '#0db7ed' },
+                { pid: '009', cpu: 54.2, cmd: 'git',             color: '#ff5f56' },
+                { pid: '010', cpu: 38.5, cmd: 'verilog-fpga',    color: '#555a7a' },
+            ];
+            const BAR_W = 20;
+            function bar(pct, color) {
+                const filled = Math.round((pct / 100) * BAR_W);
+                const empty  = BAR_W - filled;
+                return `<span class="htop-bar-fill" style="color:${color};">${'█'.repeat(filled)}</span><span class="htop-bar-empty">${'░'.repeat(empty)}</span>`;
+            }
+            const rows = procs.map(p =>
+                `<div class="htop-row">` +
+                `<span class="htop-pid">${p.pid}</span>` +
+                `<span class="htop-user">tegran</span>` +
+                `<span class="htop-cpu">${p.cpu.toFixed(1)}</span>` +
+                `<span class="htop-bar">[${bar(p.cpu, p.color)}]</span>` +
+                `<span class="htop-cmd" style="color:${p.color};">${p.cmd}</span>` +
+                `</div>`
+            ).join('');
+            htopActive = true;
+            appendLine(`<div class="htop-wrap" id="htop-output">
+<div class="htop-header">&nbsp;PID&nbsp;&nbsp; USER&nbsp;&nbsp;&nbsp; CPU%&nbsp; BAR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COMMAND</div>
+<div class="htop-sep">${'─'.repeat(58)}</div>
+${rows}
+<div class="htop-sep">${'─'.repeat(58)}</div>
+<div class="htop-footer">&nbsp;F10 q Quit &nbsp;|&nbsp; type <span style="color:#83ff08;">q</span> + Enter to exit</div>
+</div>`);
+        }
+
+        /* ── Boot sequence ── */
+        const TERM_BOOT_LINES = [
+            { text: '[  OK  ] Started bash 5.2.15(1)-release.',          color: '#729fcf',  delay: 0   },
+            { text: '[  OK  ] Sourced /home/tegran/.bashrc.',             color: '#729fcf',  delay: 250 },
+            { text: '[  OK  ] Loaded terminal emulator.',                 color: '#83ff08',  delay: 480 },
+            { text: '',                                                    color: '',         delay: 620 },
+            { text: 'Type  <span style="color:#83ff08;">help</span>  for commands &nbsp;|&nbsp; <span style="color:#83ff08;">neofetch</span>  for profile &nbsp;|&nbsp; ↹ Tab autocompletes &nbsp;|&nbsp; → accepts ghost text', color: '#b39ddb', delay: 720 },
+        ];
+
+        function runBoot(cb) {
+            TERM_BOOT_LINES.forEach(({ text, color, delay }) => {
+                setTimeout(() => {
+                    const d = document.createElement('div');
+                    d.className = 'term-line';
+                    d.style.color = color;
+                    d.innerHTML = text;
+                    bootEl.appendChild(d);
+                    termContent.scrollTop = termContent.scrollHeight;
+                }, delay);
+            });
+            setTimeout(cb, 900);
+        }
+
+        let booted = sessionStorage.getItem('booted') === 'true';
+
+        /* ── GRUB bootloader ── */
+        const grubScreen = document.getElementById('grub-screen');
+        const grubEntries = Array.from(document.querySelectorAll('.grub-entry'));
+        const grubTimerEl = document.getElementById('grub-timer');
+        let grubIdx = 0;
+        let grubCountdown = 5;
+        let grubInterval = null;
+
+        function grubSelect(idx) {
+            grubEntries.forEach((el, i) => {
+                el.classList.toggle('grub-active', i === idx);
+                el.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+            });
+            grubIdx = idx;
+        }
+
+        function doActualBoot() {
+            const termStageEl = document.getElementById('term-stage');
+            if (grubIdx === 1) {
+                /* Portfolio mode — pre-apply minimized state silently, then reveal */
+                termEl.classList.add('minimized');
+                termStage.classList.add('stage-minimized');
+                termMinimized = true;
+                showContent();
+                sessionStorage.setItem('booted', 'true');
+                sessionStorage.setItem('portfolioVisible', 'true');
+                termStageEl.style.visibility = '';
+                setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 600);
+            } else {
+                /* Terminal mode — reveal, then animate bash startup lines */
+                termStageEl.style.visibility = '';
+                content.style.display = 'none';
+                runBoot(() => {
+                    input.focus();
+                    sessionStorage.setItem('booted', 'true');
+                });
+            }
+        }
+
+        function grubBoot() {
+            clearInterval(grubInterval);
+            /* 0. Hide terminal immediately so it never flashes through */
+            document.getElementById('term-stage').style.visibility = 'hidden';
+            /* 1. Fade out GRUB */
+            grubScreen.style.transition = 'opacity 0.28s ease';
+            grubScreen.style.opacity = '0';
+            setTimeout(() => {
+                grubScreen.remove();
+                /* 2. Show loading screen with animated boot lines */
+                loadingLinesEl.innerHTML = '';
+                loadingScreen.style.display = 'flex';
+                loadingScreen.style.opacity = '1';
+                const bootAnim = [
+                    { text: 'Woodix OS v1.0  \u2014 booting portfolio\u2026', color: '#83ff08',  delay: 0   },
+                    { text: '[  OK  ] Loaded kernel modules.',              color: '#729fcf',  delay: 300 },
+                    { text: '[  OK  ] Started network services.',           color: '#729fcf',  delay: 580 },
+                    { text: '[  OK  ] Mounting /home/tegran\u2026',              color: '#729fcf',  delay: 840 },
+                    { text: '[  OK  ] Portfolio ready.',                    color: '#83ff08',  delay: 1100 },
+                ];
+                bootAnim.forEach(({ text, color, delay }) => {
+                    setTimeout(() => {
+                        const d = document.createElement('div');
+                        d.className = 'loading-line term-line';
+                        d.style.color = color;
+                        d.textContent = text;
+                        loadingLinesEl.appendChild(d);
+                    }, delay);
+                });
+                /* 3. After all lines shown, fade out then boot */
+                setTimeout(() => {
+                    loadingScreen.style.transition = 'opacity 0.35s ease';
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        loadingScreen.style.transition = '';
+                        loadingScreen.style.opacity = '1';
+                        doActualBoot();
+                    }, 370);
+                }, 1500);
+            }, 290);
+        }
+
+        /* Show GRUB on every fresh page load; skip only if flag set this session */
+        if (sessionStorage.getItem('grubPassed') === 'true') {
+            grubScreen.remove();
+            if (booted) {
+                TERM_BOOT_LINES.forEach(({ text, color }) => {
+                    const d = document.createElement('div');
+                    d.className = 'term-line';
+                    d.style.color = color;
+                    d.innerHTML = text;
+                    bootEl.appendChild(d);
+                });
+                if (sessionStorage.getItem('portfolioVisible') === 'true') showContent();
+                input.focus();
+            } else {
+                content.style.display = 'none';
+                runBoot(() => {
+                    input.focus();
+                    sessionStorage.setItem('booted', 'true');
+                });
+            }
+        } else {
+            sessionStorage.setItem('grubPassed', 'true');
+
+            /* ── Mobile: skip GRUB and boot straight to Portfolio ── */
+            const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+                             ('ontouchstart' in window && window.innerWidth < 900);
+            if (isMobile) {
+                grubIdx = 1;
+                grubSelect(1);
+                grubBoot();
+            } else {
+                /* ── Mouse: click to select, double-click to boot ── */
+                grubEntries.forEach((el, i) => {
+                    el.addEventListener('click', () => {
+                        clearInterval(grubInterval);
+                        grubTimerEl.textContent = '';
+                        document.getElementById('grub-timer-line').textContent =
+                            'Click again or press Enter to boot the selected entry.';
+                        grubSelect(i);
+                    });
+                    el.addEventListener('dblclick', () => {
+                        clearInterval(grubInterval);
+                        grubSelect(i);
+                        grubBoot();
+                    });
+                });
+
+                /* start countdown */
+                grubInterval = setInterval(() => {
+                    grubCountdown--;
+                    grubTimerEl.textContent = grubCountdown;
+                    if (grubCountdown <= 0) grubBoot();
+                }, 1000);
+
+                /* keyboard nav for GRUB */
+                document.addEventListener('keydown', function grubKeydown(e) {
+                    if (!document.getElementById('grub-screen')) {
+                        document.removeEventListener('keydown', grubKeydown);
+                        return;
+                    }
+                    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        clearInterval(grubInterval);
+                        grubTimerEl.textContent = '';
+                        document.getElementById('grub-timer-line').textContent = '';
+                        grubSelect(e.key === 'ArrowUp' ? Math.max(0, grubIdx - 1) : Math.min(grubEntries.length - 1, grubIdx + 1));
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.removeEventListener('keydown', grubKeydown);
+                        grubBoot();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        document.removeEventListener('keydown', grubKeydown);
+                        grubBoot();
+                    }
+                });
+            }
+        }
+
+        /* ── Command history ── */
+        const cmdHistory = [];
+        let histIdx = -1;
+
+        /* ── Mail form helpers ── */
+        const FORM_STEPS = [
+            {
+                key: 'name', label: 'name',
+                placeholder: 'your full name',
+                validate: v => v.trim().length >= 2,
+                err: 'Name must be at least 2 characters.',
+            },
+            {
+                key: 'email', label: 'email',
+                placeholder: 'reply-to address',
+                validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+                err: 'Enter a valid email address.',
+            },
+            {
+                key: 'message', label: 'message',
+                placeholder: 'write your message here',
+                validate: v => v.trim().length >= 5,
+                err: 'Message must be at least 5 characters.',
+            },
+        ];
+
+        const promptPrefix = document.getElementById('prompt-prefix');
+
+        function resetPrompt() {
+            promptPrefix.innerHTML =
+                '<span style="color:#83ff08;">tegran@portfolio</span>' +
+                '<span style="color:#555a7a;">:</span>' +
+                '<span style="color:#8aadf4;">~</span>' +
+                '<span style="color:#d3d7cf;">$</span>';
+        }
+
+        function setFormPrompt(label) {
+            promptPrefix.innerHTML =
+                `<span style="color:#fcaf3e;">${label}</span>` +
+                `<span style="color:#555a7a;"> ›</span>`;
+        }
+
+        function cmdMail() {
+            formActive = true;
+            formStep = 0;
+            formData = {};
+            ghostEl.textContent = '';
+            hideSuggestions();
+            appendLine(`<div class="term-output-block" style="border-left:3px solid #fcaf3e; padding-left:1em; margin-bottom:0.2em;">
+  <span style="color:#fcaf3e; font-weight:700;">compose mail</span>  <span style="color:#555a7a;">— send a message to tegran</span><br>
+  <span style="color:#b39ddb; font-size:0.9em;">Ctrl+C or Escape to cancel</span>
+</div>`);
+            promptFormStep();
+        }
+
+        function promptFormStep() {
+            const step = FORM_STEPS[formStep];
+            if (step.key === 'message') {
+                /* Show TUI editor instead of single-line input */
+                editorActive = true;
+                attachedFiles = [];
+                mailAttachEl.innerHTML = '';
+                mailLinkPop.style.display = 'none';
+                mailEditorEl.style.display = 'block';
+                mailEditorTA.value = '';
+                mailEditorTA.placeholder = 'Write your message here…\n\nPress Enter for a new line.\nCtrl+K to insert a link.\nCtrl+Enter (or the Send button) to submit.';
+                termContent.scrollTop = termContent.scrollHeight;
+                setTimeout(() => mailEditorTA.focus(), 30);
+            } else {
+                setFormPrompt(`[${formStep + 1}/${FORM_STEPS.length}] ${step.label}`);
+                input.placeholder = step.placeholder;
+                updateInputWidth();
+                input.focus();
+            }
+        }
+
+        function submitEditor() {
+            if (!editorActive) return;
+            const val = mailEditorTA.value;
+            editorActive = false;
+            mailEditorEl.style.display = 'none';
+            /* Stash files snapshot before chips get cleared */
+            formData.attachments = attachedFiles.slice();
+            /* Echo truncated preview of message */
+            const preview = val.trim().replace(/\n/g, ' ').slice(0, 60) + (val.trim().length > 60 ? '…' : '');
+            appendLine(
+                `<span style="color:#fcaf3e;">[3/3] message</span>` +
+                `<span style="color:#555a7a;"> › </span>` +
+                `<span style="color:#83ff08;">${escHtml(preview)}</span>`
+            );
+            if (formData.attachments.length) {
+                const names = formData.attachments.map(f => escHtml(f.name)).join(', ');
+                appendLine(`<span style="color:#555a7a;">📎 ${formData.attachments.length} attachment(s): ${names}</span>`);
+            }
+            advanceForm(val);
+            input.focus();
+        }
+
+        /* Ctrl+Enter in textarea submits; Ctrl+C / Escape cancels */
+        mailEditorTA.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                submitEditor();
+            } else if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                openLinkPopover();
+            } else if ((e.ctrlKey && e.key === 'c') || e.key === 'Escape') {
+                if (mailLinkPop.style.display !== 'none') {
+                    closeLinkPopover();
+                    return;
+                }
+                e.preventDefault();
+                editorActive = false;
+                mailEditorEl.style.display = 'none';
+                cancelForm();
+            }
         });
+        mailEditorBtn.addEventListener('click', submitEditor);
+
+        /* ── Attach files ── */
+        mailAttachBtn.addEventListener('click', () => mailFileInput.click());
+        mailLinkBtn.addEventListener('click', openLinkPopover);
+        mailFileInput.addEventListener('change', function () {
+            Array.from(this.files).forEach(f => {
+                if (!attachedFiles.find(x => x.name === f.name && x.size === f.size)) {
+                    attachedFiles.push(f);
+                }
+            });
+            this.value = '';
+            renderAttachChips();
+        });
+
+        function renderAttachChips() {
+            mailAttachEl.innerHTML = '';
+            attachedFiles.forEach((f, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'mail-attach-chip';
+                chip.innerHTML =
+                    `<span title="${escHtml(f.name)}">${escHtml(f.name.length > 28 ? f.name.slice(0,25)+'…' : f.name)}</span>` +
+                    `<button type="button" aria-label="Remove ${escHtml(f.name)}">×</button>`;
+                chip.querySelector('button').addEventListener('click', () => {
+                    attachedFiles.splice(i, 1);
+                    renderAttachChips();
+                });
+                mailAttachEl.appendChild(chip);
+            });
+        }
+
+        /* ── Link popover ── */
+        function openLinkPopover() {
+            const sel = mailEditorTA.value.substring(
+                mailEditorTA.selectionStart, mailEditorTA.selectionEnd
+            );
+            linkLabelInp.value = sel;
+            linkUrlInp.value = '';
+            mailLinkPop.style.display = 'block';
+            setTimeout(() => (sel ? linkUrlInp : linkLabelInp).focus(), 20);
+        }
+
+        function closeLinkPopover() {
+            mailLinkPop.style.display = 'none';
+            mailEditorTA.focus();
+        }
+
+        function doInsertLink() {
+            const url   = linkUrlInp.value.trim();
+            const label = linkLabelInp.value.trim() || url;
+            if (!url) { closeLinkPopover(); return; }
+            const text   = `[${label}](${url})`;
+            const start  = mailEditorTA.selectionStart;
+            const before = mailEditorTA.value.slice(0, start);
+            const after  = mailEditorTA.value.slice(mailEditorTA.selectionEnd);
+            mailEditorTA.value = before + text + after;
+            mailEditorTA.selectionStart = mailEditorTA.selectionEnd = start + text.length;
+            closeLinkPopover();
+        }
+
+        linkInsertBtn.addEventListener('click', doInsertLink);
+        linkUrlInp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); doInsertLink(); }
+            else if (e.key === 'Escape') { e.preventDefault(); closeLinkPopover(); }
+        });
+        linkLabelInp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); linkUrlInp.focus(); }
+            else if (e.key === 'Escape') { e.preventDefault(); closeLinkPopover(); }
+        });
+
+        function advanceForm(val) {
+            const step = FORM_STEPS[formStep];
+            /* For the message step the editor already echoed, so skip echoing here */
+            if (step.key !== 'message') {
+                if (!step.validate(val)) {
+                    appendLine(`<span style="color:#ff5f56;">✗ ${step.err}</span>`);
+                    return;
+                }
+                appendLine(
+                    `<span style="color:#fcaf3e;">[${formStep + 1}/${FORM_STEPS.length}] ${step.label}</span>` +
+                    `<span style="color:#555a7a;"> › </span>` +
+                    `<span style="color:#83ff08;">${escHtml(val.trim())}</span>`
+                );
+            } else {
+                if (!step.validate(val)) {
+                    appendLine(`<span style="color:#ff5f56;">✗ ${step.err}</span>`);
+                    /* Re-open editor */
+                    editorActive = true;
+                    mailEditorEl.style.display = 'block';
+                    setTimeout(() => mailEditorTA.focus(), 30);
+                    return;
+                }
+            }
+            formData[step.key] = val.trim();
+            formStep++;
+            if (formStep >= FORM_STEPS.length) {
+                formActive = 'confirm';
+                /* Render [label](url) as clickable links in preview */
+                const msgHtml = escHtml(formData.message)
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+                        '<a href="$2" target="_blank" rel="noopener" style="color:#8aadf4;">$1</a>');
+                const attachHtml = (formData.attachments && formData.attachments.length)
+                    ? `<br><span style="color:#fcaf3e;">attach</span>:  <span style="color:#d3d7cf;">${formData.attachments.map(f=>escHtml(f.name)).join(', ')}</span>`
+                    : '';
+                appendLine(`<div class="term-output-block" style="border-left:3px solid #83ff08; padding-left:1em; margin-top:0.4em;">
+  <span style="color:#83ff08; font-weight:700;">── message preview ──</span><br>
+  <span style="color:#fcaf3e;">from</span>:    <span style="color:#d3d7cf;">${escHtml(formData.name)}</span><br>
+  <span style="color:#fcaf3e;">email</span>:   <span style="color:#d3d7cf;">${escHtml(formData.email)}</span><br>
+  <span style="color:#fcaf3e;">message</span>:<br>
+  <pre style="color:#d3d7cf; padding-left:1em; margin:0.2em 0 0; white-space:pre-wrap; word-break:break-word;">${msgHtml}</pre>${attachHtml}
+</div>`);
+                setFormPrompt('send? [y/N]');
+                input.placeholder = 'y or n';
+            } else {
+                promptFormStep();
+            }
+        }
+
+        function cancelForm() {
+            if (editorActive) {
+                editorActive = false;
+                mailEditorEl.style.display = 'none';
+            }
+            formActive = false;
+            formStep = 0;
+            formData = {};
+            input.placeholder = 'type a command…';
+            resetPrompt();
+            appendLine(`<span style="color:#ff5f56;">^C</span><span style="color:#b39ddb;"> — mail cancelled.</span>`);
+            updateInputWidth();
+        }
+
+        /* ── Form submit ── */
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const raw = input.value;
+            input.value = '';
+            ghostEl.textContent = '';
+            updateInputWidth();
+
+            /* confirmation step */
+            if (formActive === 'confirm') {
+                const ans = raw.trim().toLowerCase();
+                if (ans === 'y' || ans === 'yes') {
+                    formActive = false;
+                    input.placeholder = 'type a command…';
+                    resetPrompt();
+                    appendLine(`<span style="color:#83ff08;">Sending…</span>`);
+                    const fd = new FormData();
+                    fd.append('name',    formData.name);
+                    fd.append('email',   formData.email);
+                    fd.append('message', formData.message);
+                    (formData.attachments || []).forEach(f => fd.append('attachments', f));
+                    fetch('/send-email', { method: 'POST', body: fd })
+                    .then(r => r.ok ? r.text() : Promise.reject(r.status))
+                    .then(() => appendLine(`<span style="color:#83ff08;">✓ Message sent — I'll get back to you soon!</span>`))
+                    .catch(() => appendLine(`<span style="color:#ff5f56;">✗ Send failed. Try reaching me via LinkedIn instead.</span>`));
+                } else {
+                    formActive = false;
+                    input.placeholder = 'type a command…';
+                    resetPrompt();
+                    appendLine(`<span style="color:#b39ddb;">Mail discarded.</span>`);
+                }
+                return;
+            }
+
+            /* active field collection */
+            if (formActive) {
+                advanceForm(raw);
+                return;
+            }
+
+            /* htop: q to exit */
+            if (htopActive) {
+                const htopEl = document.getElementById('htop-output');
+                if (htopEl) htopEl.remove();
+                htopActive = false;
+                if (raw.trim().toLowerCase() !== 'q') runCmd(raw);
+                return;
+            }
+
+            /* normal command mode */
+            if (!raw.trim()) return;
+            cmdHistory.push(raw.trim());
+            histIdx = -1;
+            runCmd(raw);
+        });
+
+        /* ── Click terminal body to refocus input ── */
+        document.getElementById('terminal').addEventListener('click', function (e) {
+            if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') input.focus();
+        });
+
+        /* initialise width */
+        updateInputWidth();
+
     });
     </script>
 </body>
