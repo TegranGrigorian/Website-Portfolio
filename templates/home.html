@@ -326,6 +326,105 @@
             border-radius: 0.2em;
         }
         .tab-sug-item.active { color: #83ff08; background: #1a1c26; }
+
+        /* ── GRUB Bootloader overlay ── */
+        #grub-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #05070d;
+            color: #d3d7cf;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1em;
+        }
+        #grub-inner {
+            width: min(680px, 95vw);
+            border: 1px solid #3a3f5c;
+            padding: 1.5em 2em 1.8em;
+            background: #0d0f14;
+            box-shadow: 0 0 60px #83ff0810, 0 4px 40px #000d;
+        }
+        .grub-header-line {
+            color: #555a7a;
+            font-size: 0.82em;
+            padding-bottom: 0.7em;
+            border-bottom: 1px solid #1e2030;
+            margin-bottom: 1.1em;
+        }
+        .grub-header-line .grub-hl { color: #83ff08; }
+        #grub-menu-box {
+            border: 1px solid #1e2030;
+            padding: 0.3em 0;
+            background: #070911;
+            min-height: 4em;
+        }
+        .grub-entry {
+            padding: 0.3em 1em;
+            color: #888;
+            font-size: 0.9em;
+            cursor: default;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .grub-entry.grub-active {
+            background: #8aadf4;
+            color: #0d0f14;
+            font-weight: 700;
+        }
+        #grub-hint {
+            color: #3a3f5c;
+            font-size: 0.76em;
+            margin-top: 1.2em;
+            line-height: 1.75;
+            border-top: 1px solid #1e2030;
+            padding-top: 0.8em;
+        }
+        #grub-timer-line {
+            color: #fcaf3e;
+            font-size: 0.8em;
+            margin-top: 0.5em;
+            min-height: 1.2em;
+        }
+
+        /* ── htop process table ── */
+        .htop-wrap {
+            font-size: 0.82em;
+            line-height: 1.5;
+        }
+        .htop-header {
+            background: #1a1c26;
+            color: #8aadf4;
+            padding: 0.1em 0.5em;
+            margin-bottom: 0.1em;
+            letter-spacing: 0.04em;
+        }
+        .htop-row {
+            display: flex;
+            gap: 0;
+            padding: 0.05em 0;
+        }
+        .htop-pid  { width: 4em;  color: #555a7a; text-align: right; padding-right: 1em; }
+        .htop-user { width: 7em;  color: #fcaf3e; }
+        .htop-cpu  { width: 5em;  color: #83ff08; text-align: right; padding-right: 0.5em; }
+        .htop-bar  { width: 15em; }
+        .htop-bar-fill  { color: #83ff08; }
+        .htop-bar-empty { color: #1e2030; }
+        .htop-cmd  { color: #d3d7cf; padding-left: 0.8em; }
+        .htop-sep  { color: #2a2d3a; padding: 0.2em 0; }
+        .htop-footer { color: #555a7a; margin-top: 0.4em; font-size: 0.9em; }
+
+        /* ── git log ── */
+        .git-commit { margin-bottom: 0.9em; }
+        .git-hash   { color: #fcaf3e; }
+        .git-ref    { color: #8aadf4; }
+        .git-author { color: #555a7a; }
+        .git-date   { color: #555a7a; }
+        .git-msg    { color: #d3d7cf; padding-left: 1.2em; margin-top: 0.1em; }
+        .git-msg-body { color: #888; padding-left: 1.2em; font-size: 0.9em; }
+
         /* ── Responsive ── */
         @media (max-width: 600px) {
             .terminal-content { padding: 1em; }
