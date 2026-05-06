@@ -455,9 +455,7 @@
     ══════════════════════════════════════════ -->
     <!-- Loading screen -->
     <div id="loading-screen" role="status" aria-label="Loading" aria-live="polite">
-        <div class="loading-logo">WOODIX</div>
-        <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
-        <div class="loading-msg" id="loading-msg">Booting…</div>
+        <div id="loading-lines"></div>
     </div>
 
     <div id="grub-screen" role="dialog" aria-label="Boot menu" aria-modal="true">
@@ -482,23 +480,15 @@
         </div>
     </div>
 
-    <nav>
-        <a class="term-blue" href="/">~/home</a> |
-        <a class="term-green" href="#projects">~/projects</a> |
-        <a class="term-cyan" href="#experience">~/experience</a> |
-        <a class="term-magenta" href="#contact">~/contact</a> |
-        <a class="term-yellow" href="https://github.com/TegranGrigorian" target="_blank" rel="noopener">github</a> |
-        <a class="term-rust" href="https://www.linkedin.com/in/tegran-grigorian/" target="_blank" rel="noopener">linkedin</a>
-    </nav>
-
     <!-- ══════════════════════════════════════════
          TERMINAL EMULATOR
     ══════════════════════════════════════════ -->
+    <div id="term-stage">
     <div id="terminal" class="terminal-landing" role="region" aria-label="Interactive terminal">
         <div class="terminal-bar">
-            <span class="term-dot red"   title="Close"></span>
-            <span class="term-dot yellow" title="Minimize"></span>
-            <span class="term-dot green"  title="Maximize"></span>
+            <span class="term-dot red"    id="dot-red"    title="Close"></span>
+            <span class="term-dot yellow" id="dot-yellow" title="Minimize"></span>
+            <span class="term-dot green"  id="dot-green"  title="Maximize"></span>
             <span class="terminal-bar-title">tegran@portfolio — bash</span>
         </div>
 
@@ -536,7 +526,8 @@
         </div>
 
 
-    </div>
+    </div><!-- /#terminal -->
+    </div><!-- /#term-stage -->
 
     <!-- ══════════════════════════════════════════
          PORTFOLIO CONTENT (classic sections)
@@ -646,12 +637,28 @@
         const bootEl      = document.getElementById('boot-lines');
         const content     = document.getElementById('portfolio-content');
         const termContent = document.getElementById('terminal-content');
-        const loadingScreen = document.getElementById('loading-screen');
-        const loadingBar    = document.getElementById('loading-bar');
-        const loadingMsg    = document.getElementById('loading-msg');
+        const loadingScreen  = document.getElementById('loading-screen');
+        const loadingLinesEl = document.getElementById('loading-lines');
+        const termEl         = document.getElementById('terminal');
         const ghostEl     = document.getElementById('ghost-text');
         const mirrorEl    = document.getElementById('input-mirror');
         const tabSugEl    = document.getElementById('tab-suggestions');
+
+        /* ── Minimize / Maximize ── */
+        let termMinimized = false;
+        function minimizeTerminal() {
+            termEl.classList.add('minimized');
+            termMinimized = true;
+        }
+        function maximizeTerminal() {
+            termEl.classList.remove('minimized');
+            termMinimized = false;
+            input.focus();
+        }
+        document.getElementById('dot-yellow').addEventListener('click', () =>
+            termMinimized ? maximizeTerminal() : minimizeTerminal()
+        );
+        document.getElementById('dot-green').addEventListener('click', () => maximizeTerminal());
 
         /* ── Mail form state (declared early so keydown can reference it) ── */
         let formActive = false;   // false | true | 'confirm'
@@ -1112,6 +1119,7 @@
 
         function cmdSkip() {
             showContent();
+            minimizeTerminal();
             setTimeout(() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' }), 100);
         }
 
@@ -1331,24 +1339,37 @@ ${rows}
             grubScreen.style.opacity = '0';
             setTimeout(() => {
                 grubScreen.remove();
-                /* 2. Show loading screen */
-                loadingMsg.textContent = grubIdx === 1 ? 'Loading portfolio…' : 'Booting Woodix terminal…';
-                loadingBar.style.animation = 'none';
-                void loadingBar.offsetWidth; /* force reflow to restart animation */
-                loadingBar.style.animation = 'loadingFill 0.85s ease-in-out forwards';
+                /* 2. Show loading screen with animated boot lines */
+                loadingLinesEl.innerHTML = '';
                 loadingScreen.style.display = 'flex';
                 loadingScreen.style.opacity = '1';
-                /* 3. After bar fills, fade out loading screen then boot */
+                const bootAnim = [
+                    { text: 'Woodix OS v1.0  \u2014 booting portfolio\u2026', color: '#83ff08',  delay: 0   },
+                    { text: '[  OK  ] Loaded kernel modules.',              color: '#729fcf',  delay: 300 },
+                    { text: '[  OK  ] Started network services.',           color: '#729fcf',  delay: 580 },
+                    { text: '[  OK  ] Mounting /home/tegran\u2026',              color: '#729fcf',  delay: 840 },
+                    { text: '[  OK  ] Portfolio ready.',                    color: '#83ff08',  delay: 1100 },
+                ];
+                bootAnim.forEach(({ text, color, delay }) => {
+                    setTimeout(() => {
+                        const d = document.createElement('div');
+                        d.className = 'loading-line term-line';
+                        d.style.color = color;
+                        d.textContent = text;
+                        loadingLinesEl.appendChild(d);
+                    }, delay);
+                });
+                /* 3. After all lines shown, fade out then boot */
                 setTimeout(() => {
-                    loadingScreen.style.transition = 'opacity 0.3s ease';
+                    loadingScreen.style.transition = 'opacity 0.35s ease';
                     loadingScreen.style.opacity = '0';
                     setTimeout(() => {
                         loadingScreen.style.display = 'none';
                         loadingScreen.style.transition = '';
                         loadingScreen.style.opacity = '1';
                         doActualBoot();
-                    }, 320);
-                }, 900);
+                    }, 370);
+                }, 1500);
             }, 290);
         }
 
