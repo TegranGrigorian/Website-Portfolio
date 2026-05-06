@@ -88,6 +88,19 @@ h1 {
 .term-assem     { color: #c678dd; font-weight: 600; } /* Assembly */
 .term-ultralytics { color: #ffcc00; font-weight: 600; } /* Ultralytics */
 
+/* ── Terminal emulator extras ── */
+.terminal-error {
+    color: #ff5f56;
+    margin-top: 0.4em;
+    font-size: 0.95em;
+}
+.help-table { border-collapse: collapse; font-size: 0.92em; }
+.help-table td { padding: 0.15em 1.2em 0.15em 0; vertical-align: top; }
+.help-table td:first-child { color: #83ff08; white-space: nowrap; }
+.help-table td:last-child  { color: #b39ddb; }
+.term-project-item { border-left: 3px solid #23203a; padding: 0.4em 0.8em; margin-bottom: 0.5em; }
+.term-project-item:hover { border-left-color: #83ff08; }
+
 .test-fonts {
     display: flex;
     flex-wrap: wrap;
